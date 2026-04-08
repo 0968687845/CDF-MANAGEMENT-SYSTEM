@@ -1,0 +1,22 @@
+# Configuration (contains real credentials and API keys)
+config.php
+
+# Uploaded user files (profiles, progress photos, receipts)
+uploads/profiles/*
+uploads/progress/*
+uploads/receipts/*
+!uploads/profiles/.gitkeep
+!uploads/progress/.gitkeep
+!uploads/receipts/.gitkeep
+
+# Application logs
+logs/emails/*
+!logs/emails/.gitkeep
+!logs/.gitkeep
+
+# Editor settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
