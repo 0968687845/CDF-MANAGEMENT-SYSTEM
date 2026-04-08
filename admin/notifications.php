@@ -17,7 +17,7 @@ $unreadCount = count(array_filter($notifications, function($n) {
 // Handle notification actions
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
-    $notificationId = $_GET['id'] ?? null;
+    $notificationId = (int)($_GET['id'] ?? 0);
     
     if ($action === 'mark_read' && $notificationId) {
         if (markNotificationAsRead($notificationId)) {

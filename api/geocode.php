@@ -25,9 +25,9 @@ $lat = isset($_GET['lat']) ? floatval($_GET['lat']) : 0;
 $lng = isset($_GET['lng']) ? floatval($_GET['lng']) : 0;
 
 // Initialize cache directory
-$cacheDir = __DIR__ . '/../cache/geocoding';
+$cacheDir = __DIR__ . '/../../storage/cache/geocoding';
 if (!is_dir($cacheDir)) {
-    mkdir($cacheDir, 0755, true);
+    mkdir($cacheDir, 0700, true);
 }
 
 /**
