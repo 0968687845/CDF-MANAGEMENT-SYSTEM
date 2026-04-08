@@ -26,6 +26,7 @@
 14. [Team Structure & Roles](#14-team-structure--roles)
 15. [Risk Register](#15-risk-register)
 16. [Definition of Done](#16-definition-of-done)
+17. [UI/UX Design System](#17-uiux-design-system)
 
 ---
 
@@ -1539,3 +1540,772 @@ A release is not ready until:
 ---
 
 *This plan is the authoritative technical reference for the CDF Management System enterprise rebuild. All architectural decisions documented here should be treated as the agreed baseline. Changes to the architecture require a written amendment to this document.*
+
+---
+
+## 17. UI/UX Design System
+
+This section documents the complete visual design language of the existing PHP system as built by the student developer. The enterprise Flutter rebuild **must preserve this design identity** — the color palette, government branding, component patterns, and both light/dark themes are to be faithfully translated into Flutter's Material 3 theming system, not replaced.
+
+---
+
+### 17.1 Brand Identity & Government Assets
+
+The system carries the full visual identity of the **Government of the Republic of Zambia**. These assets appear on every page and must be reproduced identically in Flutter.
+
+| Asset | File | Usage |
+|---|---|---|
+| Zambia Coat of Arms | `coat-of-arms-of-zambia.jpg` | Navbar brand (45×45px), login card header (80×80px), all public-facing pages |
+| Zambia National Flag | `Flag_of_Zambia.svg` | Footer, right-aligned, 30×20px |
+| Favicon | `favicon.ico` | Browser tab icon |
+
+**Navbar brand text:** `Government of Zambia - CDF System`
+**Page title format:** `[Page Name] - CDF Management System | Government of Zambia`
+**Footer copyright:** `© [Year] Government of the Republic of Zambia. All rights reserved.`
+**Legal reference in footer:** `Developed in compliance with the Constituency Development Fund Act Cap 324 and 2022 CDF Guidelines.`
+
+The Coat of Arms is displayed with these CSS effects that must be replicated in Flutter:
+- Slight brightness boost (`brightness(1.05)`) and contrast lift (`contrast(1.1)`)
+- Drop shadow: `0 4px 8px rgba(0,0,0,0.5)`
+- Semi-transparent white border and background
+- Scale-up + glow on hover/press
+
+---
+
+### 17.2 Color Palette
+
+All colors are extracted directly from `includes/global_theme.php` and `login.php`. These are the exact hex values used throughout the system.
+
+#### Primary Colors
+
+| Token | Hex | Usage |
+|---|---|---|
+| `--primary` | `#1a4e8a` | Navbar, card headers, borders, buttons, links, stat numbers, focus rings |
+| `--primary-dark` | `#0d3a6c` | Gradient end, hover states, dark navbar |
+| `--primary-light` | `#2c6cb0` | Gradient end on lighter elements, hover states |
+
+**Primary gradient:** `linear-gradient(135deg, #1a4e8a 0%, #0d3a6c 100%)`
+
+The primary blue `#1a4e8a` is the dominant brand color. It represents government authority and is derived from the deep blue present in the Zambian flag and Coat of Arms.
+
+#### Secondary / Accent Colors
+
+| Token | Hex | Usage |
+|---|---|---|
+| `--secondary` | `#e9b949` | CTA buttons on dark backgrounds, profile avatar fill, golden accent borders, shimmer effects |
+| `--secondary-dark` | `#d4a337` | Secondary gradient end, hover on secondary buttons |
+
+**Secondary gradient:** `linear-gradient(135deg, #e9b949 0%, #d4a337 100%)`
+
+The secondary gold `#e9b949` is derived from the Zambian national colors (green, black, orange/copper) and creates the government gold accent seen throughout. It is used as the bottom border on the navbar, the profile avatar background, and the highlight on government notice components.
+
+#### Semantic Colors
+
+| Token | Hex | Light Variant | Dark Variant | Usage |
+|---|---|---|---|---|
+| `--success` | `#28a745` | `#d4edda` | `#1e7e34` | Approved status, completed projects, positive metrics |
+| `--warning` | `#ffc107` | `#fff3cd` | `#e0a800` | Pending items, alerts, budget warnings |
+| `--danger` | `#dc3545` | `#f8d7da` | `#c82333` | Rejected status, errors, delete actions |
+| `--info` | `#17a2b8` | `#d1ecf1` | `#138496` | Informational notices, in-progress indicators |
+
+#### Neutral Colors
+
+| Token | Hex | Usage |
+|---|---|---|
+| `--white` | `#ffffff` | Card backgrounds, text on dark, button text |
+| `--light` | `#f8f9fa` | Page background base, alternate rows |
+| `--gray-100` | `#f8f9fa` | Light backgrounds |
+| `--gray-200` | `#e9ecef` | Borders, dividers, stripe rows |
+| `--gray-300` | `#dee2e6` | Input borders (default) |
+| `--gray-400` | `#ced4da` | Disabled states |
+| `--gray-500` | `#adb5bd` | Placeholder text |
+| `--gray-600` | `#6c757d` | Muted/secondary text |
+| `--gray-700` | `#495057` | Body text secondary |
+| `--gray-800` | `#343a40` | Headings secondary |
+| `--gray-900` / `--dark` | `#212529` | Primary body text |
+
+#### Page Background
+
+**Light mode:** `linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%)` fixed attachment
+**Subtle overlay (login page):**
+```
+radial-gradient(circle at 20% 80%, rgba(26,78,138,0.05) 0%, transparent 50%),
+radial-gradient(circle at 80% 20%, rgba(233,185,73,0.05) 0%, transparent 50%)
+```
+
+---
+
+### 17.3 Dark Mode
+
+The system has a fully implemented dark theme toggled via `localStorage` and applied via `body.dark-theme` class. The `applyTheme()` function supports three modes: `light`, `dark`, and `auto` (follows system preference).
+
+The Flutter rebuild must implement equivalent dark/light theme switching using `ThemeMode` with a persistent preference in `SharedPreferences` or `flutter_secure_storage`.
+
+#### Dark Mode Color Overrides
+
+| Element | Light | Dark |
+|---|---|---|
+| Body background | `linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%)` | `linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)` |
+| Navbar background | `linear-gradient(135deg, #1a4e8a 0%, #0d3a6c 100%)` | `linear-gradient(135deg, #0f3460 0%, #162a47 100%)` |
+| Card / form background | `#ffffff` | `#2a2a3e` |
+| Card header background | `linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)` | `#3a3a4e` |
+| Input background | — | `#3a3a4e` |
+| Input focused | — | `#424455` |
+| Body text | `#212529` | `#e0e0e0` |
+| Muted text | `#6c757d` | `#a0a0b0` |
+| Borders / dividers | `#dee2e6` | `#404052` |
+| Table header | `#f8f9fa` | `#3a3a4e` |
+| Striped row | — | `#32323f` |
+| Scrollbar track | `#e9ecef` | `#3a3a4e` |
+| Scrollbar thumb | `#1a4e8a` | `#505062` |
+| Scrollbar thumb hover | `#0d3a6c` | `#606072` |
+| Modal background | `#ffffff` | `#2a2a3e` |
+| Modal header | — | `#3a3a4e` |
+| Dropdown background | `#ffffff` | `#2a2a3e` |
+
+---
+
+### 17.4 Typography
+
+**Font stack:** `'Segoe UI', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif`
+
+For Flutter, use **Inter** (via `google_fonts` package) as the primary typeface. It is already named in the CSS stack and is the closest cross-platform equivalent to Segoe UI.
+
+#### Type Scale
+
+| Token | Size | Usage |
+|---|---|---|
+| `--text-xs` | `0.75rem` / 12sp | Fine print, disclaimers |
+| `--text-sm` | `0.875rem` / 14sp | Secondary text, table cells, labels |
+| `--text-base` | `1rem` / 16sp | Body text, form inputs, nav links |
+| `--text-lg` | `1.125rem` / 18sp | Navbar brand, section subtitles |
+| `--text-xl` | `1.25rem` / 20sp | Section titles, card headings |
+| `--text-2xl` | `1.5rem` / 24sp | Page sub-headings |
+| `--text-3xl` | `1.875rem` / 30sp | Page headings |
+| `--text-4xl` | `2.25rem` / 36sp | Hero headings |
+| `--text-5xl` | `3rem` / 48sp | Large display numbers |
+
+#### Font Weights
+- Body: `400`
+- Semi-bold (labels, nav): `600`
+- Bold (headings, card titles): `700`
+- Extra bold (stat numbers, brand): `800–900`
+
+#### Additional Typography Rules
+- Line height: `1.7` on body
+- Letter spacing on buttons: `0.05em` (uppercase)
+- Stat numbers: `font-size: 2.75rem`, `font-weight: 900`, `color: #1a4e8a`
+- Dashboard title: `font-size: 2.25rem`, `font-weight: 800`
+- Card header titles: `font-size: 1.25rem`, `font-weight: 800`, `color: #1a4e8a`
+
+---
+
+### 17.5 Spacing System
+
+| Token | Value | Approx Flutter |
+|---|---|---|
+| `--space-1` | `0.25rem` | 4dp |
+| `--space-2` | `0.5rem` | 8dp |
+| `--space-3` | `0.75rem` | 12dp |
+| `--space-4` | `1rem` | 16dp |
+| `--space-5` | `1.25rem` | 20dp |
+| `--space-6` | `1.5rem` | 24dp |
+| `--space-8` | `2rem` | 32dp |
+| `--space-10` | `2.5rem` | 40dp |
+| `--space-12` | `3rem` | 48dp |
+| `--space-16` | `4rem` | 64dp |
+| `--space-20` | `5rem` | 80dp |
+
+---
+
+### 17.6 Border Radius
+
+| Token | Value | Usage |
+|---|---|---|
+| `--border-radius-sm` | `8px` | Input groups, small tags, dropdown items |
+| `--border-radius` | `12px` | Cards, buttons, form controls, modals |
+| `--border-radius-lg` | `16px` | Stat cards, content cards, login card |
+| `--border-radius-xl` | `20px` | Large modals, hero cards |
+
+---
+
+### 17.7 Elevation & Shadows
+
+| Token | Value | Usage |
+|---|---|---|
+| `--shadow-sm` | `0 2px 8px rgba(0,0,0,0.06)` | Tool cards, project cards at rest |
+| `--shadow` | `0 4px 12px rgba(0,0,0,0.08)` | Cards, dropdowns, navbar |
+| `--shadow-md` | `0 6px 20px rgba(0,0,0,0.15)` | Modals |
+| `--shadow-lg` | `0 8px 25px rgba(0,0,0,0.15)` | Hovered cards, footer, login card |
+| `--shadow-hover` | `0 12px 40px rgba(0,0,0,0.22)` | Buttons on hover, elevated cards |
+
+Profile avatar gold glow on hover: `0 12px 30px rgba(233,185,73,0.4)`
+
+---
+
+### 17.8 Animation & Transitions
+
+**Standard transition:** `all 0.3s cubic-bezier(0.4, 0, 0.2, 1)` — Material Design easing
+**Slow transition:** `all 0.5s cubic-bezier(0.4, 0, 0.2, 1)` — Button shimmer sweep
+**Fast transition:** `all 0.15s cubic-bezier(0.4, 0, 0.2, 1)` — Micro-interactions
+
+#### Hover Interactions (to replicate in Flutter)
+
+| Component | Hover Effect |
+|---|---|
+| Stat cards | `translateY(-8px)` + shadow elevation |
+| Tool cards | `translateY(-8px) scale(1.02)` + invert to primary blue fill |
+| Project cards | `translateY(-5px)` + shadow elevation |
+| Buttons (primary) | `translateY(-3px)` + shadow-hover + shimmer sweep left-to-right |
+| Nav links | `translateY(-2px)` + semi-transparent white background + golden underline grows from center |
+| Coat of Arms | `scale(1.1)` + increased brightness + golden border |
+| Dropdown items | `translateX(5px)` + primary blue background + white text |
+
+#### Page Load Animation
+Cards and login form animate in with `fadeInUp`:
+```
+from: { opacity: 0, transform: translateY(30px) }
+to:   { opacity: 1, transform: translateY(0) }
+duration: 0.6s ease-out
+```
+Flutter equivalent: `SlideTransition` + `FadeTransition` on screen entry.
+
+#### Loading States
+Submit buttons transition to a spinner state on press:
+`<i class="fas fa-spinner fa-spin me-2"></i>Authenticating...` + `disabled = true`
+Flutter equivalent: `CircularProgressIndicator` replaces button label while awaiting API.
+
+---
+
+### 17.9 Icon Library
+
+**Library:** Font Awesome 6.4.0 Free (CDN)
+Flutter equivalent: **`font_awesome_flutter`** package (same icon set, same names)
+
+#### Icons Used Per Feature Area
+
+| Feature | Icons |
+|---|---|
+| Navigation / Auth | `fa-home`, `fa-sign-in-alt`, `fa-sign-out-alt`, `fa-user-plus`, `fa-lock`, `fa-user`, `fa-key`, `fa-eye`, `fa-eye-slash`, `fa-spinner` |
+| Dashboard | `fa-tachometer-alt`, `fa-chart-line`, `fa-chart-bar`, `fa-chart-pie` |
+| Projects | `fa-project-diagram`, `fa-folder`, `fa-folder-open`, `fa-tasks`, `fa-check-circle`, `fa-times-circle` |
+| Users | `fa-users`, `fa-user`, `fa-user-edit`, `fa-user-check`, `fa-user-times`, `fa-id-card` |
+| Financial | `fa-money-bill-wave`, `fa-coins`, `fa-receipt`, `fa-calculator`, `fa-wallet` |
+| Progress | `fa-chart-line`, `fa-percentage`, `fa-camera`, `fa-image` |
+| Site Visits | `fa-map-marker-alt`, `fa-map`, `fa-compass`, `fa-calendar-alt`, `fa-clock` |
+| Evaluations | `fa-clipboard-check`, `fa-star`, `fa-award`, `fa-certificate`, `fa-poll` |
+| Communication | `fa-bell`, `fa-envelope`, `fa-comment`, `fa-exclamation-triangle`, `fa-check-circle` |
+| Settings | `fa-cog`, `fa-sliders-h`, `fa-shield-alt`, `fa-database`, `fa-paint-brush` |
+| Status | `fa-info-circle`, `fa-exclamation-circle`, `fa-check`, `fa-times`, `fa-question-circle` |
+| Actions | `fa-plus`, `fa-edit`, `fa-trash`, `fa-eye`, `fa-download`, `fa-upload`, `fa-search`, `fa-filter` |
+| Government | `fa-landmark`, `fa-flag`, `fa-balance-scale`, `fa-gavel` |
+| Misc | `fa-arrow-left`, `fa-arrow-right`, `fa-external-link-alt`, `fa-sync`, `fa-save` |
+
+---
+
+### 17.10 Component Specifications
+
+#### Navbar
+
+```
+Background:    linear-gradient(135deg, #1a4e8a → #0d3a6c)
+Bottom border: 3px solid #e9b949
+Height:        ~72px (fixed-top)
+Shadow:        0 8px 30px rgba(0,0,0,0.18)
+Backdrop:      blur(10px)
+
+Brand:
+  - Coat of Arms image (45×45px) with semi-transparent border
+  - Text: "Government of Zambia - CDF System"
+  - Font: 1.25rem, weight 800, white, text-shadow
+
+Nav links:
+  - Color: white, weight 600
+  - Padding: 12px 16px, border-radius 8px
+  - Hover: semi-transparent white bg + translateY(-1px)
+  - Active/hover underline: golden line (3px, grows from center)
+  - Text shadow: rgba(0,0,0,0.6) for legibility
+```
+
+#### Dashboard Header Banner
+
+```
+Background:    linear-gradient(135deg, #1a4e8a → #0d3a6c)
+Padding:       3rem top, 2.5rem bottom
+Margin-top:    76px (clears fixed navbar)
+Overlay:       SVG polygon (white 5% opacity) — decorative diagonal fill
+
+Profile avatar:
+  - 100×100px circle
+  - Fill: linear-gradient(135deg, #e9b949 → #d4a337)
+  - Shows user initials (2 letters)
+  - Font: 2.5rem, weight 800, dark text
+  - Border: 4px solid rgba(255,255,255,0.3)
+  - Shadow: 0 8px 25px rgba(0,0,0,0.15)
+  - Hover glow: 0 12px 30px rgba(233,185,73,0.4)
+
+User greeting: font-size 2.25rem, weight 800, white
+Role/subtitle: font-size 1.25rem, opacity 0.95, white
+```
+
+#### Stat Cards
+
+```
+Background:    #ffffff
+Border-radius: 16px
+Shadow:        0 4px 12px rgba(0,0,0,0.08)
+Top accent:    5px gradient bar (#1a4e8a → #2c6cb0)
+Padding:       2rem 1.5rem, centered
+
+Stat number:   2.75rem, weight 900, color #1a4e8a
+               text-shadow: 0 2px 4px rgba(26,78,138,0.15)
+Stat title:    1.1rem, weight 700, #333333
+Stat subtitle: 0.9rem, weight 500, #666666
+
+Hover: translateY(-8px) + shadow-lg
+```
+
+#### Content Cards
+
+```
+Background:    #ffffff
+Border-radius: 16px
+Shadow:        0 4px 12px rgba(0,0,0,0.08)
+Border:        1px solid rgba(0,0,0,0.03)
+
+Card header:
+  Background:  linear-gradient(135deg, #f8f9fa → #e9ecef)
+  Border-bottom: 3px solid #1a4e8a
+  Padding:     1.5rem
+  Title:       1.25rem, weight 800, color #1a4e8a, flex with icon
+
+Hover: translateY(-2px) + shadow-lg
+```
+
+#### Tool Cards (Quick Action Grid)
+
+```
+Background:    #ffffff
+Border-radius: 12px
+Shadow:        0 2px 8px rgba(0,0,0,0.06)
+Left border:   5px solid [role color]
+Padding:       2rem 1.5rem, centered column
+
+Icon:          2.5rem Font Awesome, color matches border
+Title:         1.1rem, weight 700
+Body text:     0.9rem, muted
+
+Color variants (left border + icon color):
+  Default → #1a4e8a (primary blue)
+  .success → #28a745
+  .warning → #ffc107
+  .info    → #17a2b8
+  .danger  → #dc3545
+
+Hover: translateY(-8px) + scale(1.02) + shadow-lg
+       background inverts to primary gradient (#1a4e8a → #0d3a6c)
+       icon + text → white
+       shimmer sweep (left-to-right)
+```
+
+#### Primary Button (`.btn-custom`)
+
+```
+Background:    linear-gradient(135deg, #1a4e8a → #0d3a6c)
+Color:         #ffffff
+Border:        none
+Padding:       1rem 1.5rem
+Font:          1rem, weight 700, UPPERCASE, letter-spacing 0.05em
+Border-radius: 12px
+Shadow:        0 4px 12px rgba(0,0,0,0.08)
+Text-shadow:   0 1px 2px rgba(0,0,0,0.2)
+
+Hover: translateY(-3px) + shadow-hover + shimmer sweep
+```
+
+#### CTA Button on Dark Background (`.btn-primary-custom`)
+
+```
+Background:    linear-gradient(135deg, #e9b949 → #d4a337)
+Color:         #212529 (dark text on gold)
+Border:        none
+Padding:       1rem 2rem
+Font:          weight 700
+Border-radius: 12px
+
+Hover: translateY(-3px) + shadow-lg + shimmer
+       background shifts to #d4a337 → #c4952e
+```
+
+#### Outline Button (`.btn-outline-custom`)
+
+```
+On light background:
+  Background:  transparent
+  Color:       #1a4e8a
+  Border:      2px solid #1a4e8a
+  Hover: background fills with #1a4e8a, text → white, translateY(-2px)
+
+On dark background:
+  Color:       #ffffff
+  Border:      2px solid rgba(255,255,255,0.7)
+  Hover: background → white, text → #1a4e8a
+```
+
+#### Form Controls
+
+```
+Input / Select:
+  Border:       2px solid #dee2e6
+  Border-radius: 12px
+  Padding:      1rem 1.25rem
+  Font-size:    1rem
+  Focus:        border-color #1a4e8a, box-shadow 0 0 0 0.2rem rgba(26,78,138,0.25)
+
+Input group icon (left):
+  Background:  #1a4e8a
+  Border:      2px solid #1a4e8a
+  Color:       white
+  Border-radius: 12px 0 0 12px
+```
+
+#### Government Notice Box
+
+```
+Background:   linear-gradient(135deg, #f8f9fa → #e9ecef)
+Border:       2px solid #1a4e8a
+Border-radius: 12px
+Padding:      1.25rem
+
+Left accent bar: 5px wide, linear-gradient(#e9b949 → #d4a337) — the gold stripe
+```
+
+#### Status Badges
+
+```
+Completed / Active:  background #d4edda, color #1e7e34 (green)
+In Progress:         background #d1ecf1, color #138496 (info blue)
+Pending:             background #fff3cd, color #e0a800 (amber)
+Rejected / Danger:   background #f8d7da, color #c82333 (red)
+Planning:            background #e9ecef, color #495057 (gray)
+
+Border-radius: 20px (pill shape)
+Font: 0.75–0.8rem, weight 600, uppercase
+Padding: 0.25rem 0.75rem
+```
+
+#### Progress Bars
+
+```
+Track:       #e9ecef, border-radius 4px
+Fill:        linear-gradient(135deg, #1a4e8a → #2c6cb0)
+Over budget warning fill: #dc3545
+Height:      8px (standard), 10px (featured)
+Border-radius: 4px on fill
+```
+
+#### Scrollbar
+
+```
+Width:   8px
+Track:   #e9ecef (light) / #3a3a4e (dark)
+Thumb:   #1a4e8a (light) / #505062 (dark), border-radius 4px
+Hover:   #0d3a6c (light) / #606072 (dark)
+```
+
+#### Footer
+
+```
+Background:    linear-gradient(135deg, #1a4e8a → #0d3a6c)
+Shadow:        0 8px 30px rgba(0,0,0,0.18)
+Padding:       2rem top, 1rem bottom
+Overlay:       SVG polygon (white 5% opacity) — mirrors header decoration
+
+Bottom divider: border-top 2px solid rgba(255,255,255,0.3)
+
+Disclaimer box:
+  Background:  rgba(0,0,0,0.3)
+  Border:      1px solid rgba(255,255,255,0.1)
+  Border-left: 4px solid #e9b949
+  Border-radius: 12px
+  Backdrop:    blur(10px)
+  Font:        0.875rem, white
+
+Zambia Flag: 30×20px, positioned right
+```
+
+---
+
+### 17.11 Page Layout Patterns
+
+#### Authenticated Page Structure
+
+```
+┌─────────────────────────────────────────┐
+│  NAVBAR (fixed, 72px, primary gradient) │
+│  [Coat of Arms] [Brand Text]  [Nav Links]│
+└─────────────────────────────────────────┘
+│                                          │
+│  DASHBOARD HEADER (primary gradient)    │
+│  [Avatar] [Name] [Role]                 │
+│  [Action Buttons]                       │
+│                                          │
+├─────────────────────────────────────────┤
+│                                          │
+│  CONTENT AREA (light gradient bg)       │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐  │
+│  │ Stat │ │ Stat │ │ Stat │ │ Stat │  │
+│  │ Card │ │ Card │ │ Card │ │ Card │  │
+│  └──────┘ └──────┘ └──────┘ └──────┘  │
+│                                          │
+│  ┌──────────────────┐ ┌───────────────┐ │
+│  │  Content Card    │ │ Content Card  │ │
+│  │  (table/list)    │ │ (chart/info)  │ │
+│  └──────────────────┘ └───────────────┘ │
+│                                          │
+│  TOOL GRID (quick actions)              │
+│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐  │
+│  │ Tool │ │ Tool │ │ Tool │ │ Tool │  │
+│  └──────┘ └──────┘ └──────┘ └──────┘  │
+│                                          │
+├─────────────────────────────────────────┤
+│  FOOTER (primary gradient)              │
+│  [Copyright] [Flag] [Disclaimer]        │
+└─────────────────────────────────────────┘
+```
+
+#### Mobile Layout (< 768px)
+- Navbar collapses to hamburger toggle
+- Stat cards stack 1-column
+- Tool grid stacks 1–2 columns
+- Buttons become full-width
+- Login card has reduced padding
+
+#### Flutter Adaptive Layout Mapping
+
+| Screen width | Flutter layout |
+|---|---|
+| ≥ 1200px (web desktop) | Side navbar + content area |
+| 600–1199px (tablet / narrow web) | Collapsible rail navigation |
+| < 600px (mobile) | Bottom navigation bar |
+
+---
+
+### 17.12 Flutter Theme Implementation
+
+The following is the direct Flutter theme configuration derived from the design system above. This is the starting point for `app_theme.dart`:
+
+```dart
+// lib/core/theme/app_theme.dart
+
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+class AppTheme {
+  // ── Primary palette ──────────────────────────────────────
+  static const Color primary      = Color(0xFF1A4E8A);
+  static const Color primaryDark  = Color(0xFF0D3A6C);
+  static const Color primaryLight = Color(0xFF2C6CB0);
+
+  // ── Secondary / accent (Zambian gold) ────────────────────
+  static const Color secondary     = Color(0xFFE9B949);
+  static const Color secondaryDark = Color(0xFFD4A337);
+
+  // ── Semantic ──────────────────────────────────────────────
+  static const Color success = Color(0xFF28A745);
+  static const Color warning = Color(0xFFFFC107);
+  static const Color danger  = Color(0xFFDC3545);
+  static const Color info    = Color(0xFF17A2B8);
+
+  // ── Neutrals ──────────────────────────────────────────────
+  static const Color dark    = Color(0xFF212529);
+  static const Color gray600 = Color(0xFF6C757D);
+  static const Color gray200 = Color(0xFFE9ECEF);
+  static const Color light   = Color(0xFFF8F9FA);
+
+  // ── Dark mode surfaces ────────────────────────────────────
+  static const Color darkSurface     = Color(0xFF2A2A3E);
+  static const Color darkCardHeader  = Color(0xFF3A3A4E);
+  static const Color darkBackground1 = Color(0xFF1A1A2E);
+  static const Color darkBackground2 = Color(0xFF0F3460);
+  static const Color darkText        = Color(0xFFE0E0E0);
+  static const Color darkMutedText   = Color(0xFFA0A0B0);
+  static const Color darkBorder      = Color(0xFF404052);
+
+  // ── Gradients ─────────────────────────────────────────────
+  static const LinearGradient primaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [primary, primaryDark],
+  );
+
+  static const LinearGradient secondaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [secondary, secondaryDark],
+  );
+
+  static const LinearGradient lightBackgroundGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFF5F7FA), Color(0xFFE4E8F0)],
+  );
+
+  static const LinearGradient darkBackgroundGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [darkBackground1, darkBackground2],
+  );
+
+  // ── Shadows ───────────────────────────────────────────────
+  static List<BoxShadow> shadowSm = [
+    BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 8, offset: Offset(0, 2)),
+  ];
+  static List<BoxShadow> shadow = [
+    BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: Offset(0, 4)),
+  ];
+  static List<BoxShadow> shadowLg = [
+    BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 25, offset: Offset(0, 8)),
+  ];
+  static List<BoxShadow> shadowHover = [
+    BoxShadow(color: Colors.black.withOpacity(0.22), blurRadius: 40, offset: Offset(0, 12)),
+  ];
+  static List<BoxShadow> goldGlow = [
+    BoxShadow(color: Color(0xFFE9B949).withOpacity(0.4), blurRadius: 30, offset: Offset(0, 12)),
+  ];
+
+  // ── Light ThemeData ───────────────────────────────────────
+  static ThemeData lightTheme = ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.light(
+      primary: primary,
+      onPrimary: Colors.white,
+      secondary: secondary,
+      onSecondary: dark,
+      error: danger,
+      surface: Colors.white,
+      onSurface: dark,
+      surfaceContainerHighest: light,
+    ),
+    textTheme: GoogleFonts.interTextTheme().copyWith(
+      displayLarge: GoogleFonts.inter(fontSize: 48, fontWeight: FontWeight.w900, color: primary),
+      displayMedium: GoogleFonts.inter(fontSize: 36, fontWeight: FontWeight.w800, color: dark),
+      headlineLarge: GoogleFonts.inter(fontSize: 30, fontWeight: FontWeight.w800, color: dark),
+      headlineMedium: GoogleFonts.inter(fontSize: 24, fontWeight: FontWeight.w700, color: dark),
+      headlineSmall: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700, color: primary),
+      titleLarge: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: primary),
+      titleMedium: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w600, color: dark),
+      bodyLarge: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w400, color: dark, height: 1.7),
+      bodyMedium: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w400, color: dark, height: 1.7),
+      labelLarge: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.8),
+    ),
+    cardTheme: CardThemeData(
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Color(0xFFDEE2E6), width: 2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primary, width: 2),
+      ),
+      contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 0.8),
+      ),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: primary,
+      foregroundColor: Colors.white,
+      elevation: 8,
+      titleTextStyle: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+    ),
+  );
+
+  // ── Dark ThemeData ────────────────────────────────────────
+  static ThemeData darkTheme = ThemeData(
+    useMaterial3: true,
+    colorScheme: ColorScheme.dark(
+      primary: primary,
+      onPrimary: Colors.white,
+      secondary: secondary,
+      onSecondary: dark,
+      error: danger,
+      surface: darkSurface,
+      onSurface: darkText,
+      surfaceContainerHighest: darkCardHeader,
+    ),
+    scaffoldBackgroundColor: darkBackground1,
+    textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme).copyWith(
+      displayLarge: GoogleFonts.inter(fontSize: 48, fontWeight: FontWeight.w900, color: primary),
+      headlineSmall: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w700, color: darkText),
+      titleLarge: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w800, color: darkText),
+      bodyLarge: GoogleFonts.inter(fontSize: 16, color: darkText, height: 1.7),
+      bodyMedium: GoogleFonts.inter(fontSize: 14, color: darkText, height: 1.7),
+    ),
+    cardTheme: CardThemeData(
+      color: darkSurface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: darkCardHeader,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: darkBorder, width: 2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: primary, width: 2),
+      ),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: darkBackground2,
+      foregroundColor: darkText,
+      elevation: 8,
+    ),
+  );
+}
+```
+
+---
+
+### 17.13 Design Decisions to Preserve
+
+The following are deliberate design choices made by the original developer that must be carried forward without modification:
+
+1. **Government blue as dominant color** — `#1a4e8a` is the visual authority signal. It appears on every header, navbar, card accent, and interactive element. Do not substitute with a different blue.
+
+2. **Zambian gold as the accent** — `#e9b949` appears as the bottom border on the navbar, the profile avatar fill, and CTAs on dark surfaces. It references the copper/gold in Zambia's national symbolism. It must not be replaced with orange, yellow, or any other accent.
+
+3. **Coat of Arms on every page header** — This is not decorative. It is the legal signal that this is an official government system. It must appear in the Flutter app bar on all authenticated screens.
+
+4. **Dark mode is a first-class feature** — The student built a complete dark mode with full coverage. The enterprise rebuild must ship with both themes and respect `prefers-color-scheme` as the default, with a manual override stored in user preferences.
+
+5. **Golden bottom border on the navbar** — The `3px solid #e9b949` separator between navbar and page content is a consistent design signature. In Flutter, implement it as a `bottom` border on the `AppBar` decoration.
+
+6. **Profile avatar uses initials in a gold circle** — Not a profile photo default. The gold avatar with initials (`#e9b949` gradient, dark text) is a deliberate government-appropriate choice over a generic avatar icon.
+
+7. **Cards have a colored top/left accent strip** — Every card carries a 4–5px accent border (top or left) in the relevant semantic color. This is the primary visual indicator of card type and must be replicated in Flutter `Container` decoration.
+
+8. **Uppercase letter-spaced button labels** — Buttons use `text-transform: uppercase` with `letter-spacing: 0.05em`. In Flutter, apply `TextStyle(letterSpacing: 0.8)` and uppercase the string.
+
+9. **Shimmer sweep on button hover** — The left-to-right white shimmer on button hover/press is a deliberate premium interaction. Implement using an `AnimationController` + `LinearGradient` overlay in Flutter.
+
+10. **Footer repeats the navbar gradient** — Header and footer use the same `#1a4e8a → #0d3a6c` gradient with SVG polygon overlay. This creates visual bookends. The Flutter scaffold should have a matching bottom footer on web layout.
+
+---
+
+*End of Design System documentation. All values above are extracted directly from `login.php`, `admin_dashboard.php`, and `includes/global_theme.php` of the school project source code.*
