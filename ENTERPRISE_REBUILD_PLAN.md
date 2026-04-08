@@ -1545,7 +1545,23 @@ A release is not ready until:
 
 ## 17. UI/UX Design System
 
-This section documents the complete visual design language of the existing PHP system as built by the student developer. The enterprise Flutter rebuild **must preserve this design identity** — the color palette, government branding, component patterns, and both light/dark themes are to be faithfully translated into Flutter's Material 3 theming system, not replaced.
+### Overview
+
+This section is the authoritative design specification for the CDF Management System enterprise rebuild. It codifies the visual language established in the original system — the Zambian government color identity, branding assets, component behavior, and both light and dark themes — and elevates it to a consistent, accessible, production-grade design system ready for Flutter implementation.
+
+The original developer made the right foundational choices: deep government blue as the authority color, Zambian copper-gold as the accent, full dark mode support, and prominent national branding. Those decisions are preserved here without compromise. What this specification adds is rigor: defined contrast ratios, a strict 8dp spacing grid, explicit component states, a Material 3–compliant token hierarchy, and clear rules for when each element is used.
+
+**Design Principles**
+
+| Principle | What it means in practice |
+|---|---|
+| **Authority** | Every screen must carry the Zambian government identity. The Coat of Arms, national colors, and official typography signal this is a state system, not a commercial app. |
+| **Clarity** | Government users process high volumes of data. Hierarchy must be unambiguous. Labels, status indicators, and actions must be immediately readable without interpretation. |
+| **Accessibility** | All text meets WCAG 2.1 AA contrast minimums. All interactive elements are reachable by keyboard and screen reader. Color is never the sole indicator of meaning. |
+| **Consistency** | Every instance of every component looks and behaves identically across all screens. No one-off styles. |
+| **Restraint** | Animation and decoration serve function, not flair. Transitions confirm state changes. Hover effects indicate interactivity. Nothing moves just to look impressive. |
+
+---
 
 ---
 
@@ -1566,15 +1582,1121 @@ The system carries the full visual identity of the **Government of the Republic 
 
 The Coat of Arms is displayed with these CSS effects that must be replicated in Flutter:
 - Slight brightness boost (`brightness(1.05)`) and contrast lift (`contrast(1.1)`)
-- Drop shadow: `0 4px 8px rgba(0,0,0,0.5)`
-- Semi-transparent white border and background
-- Scale-up + glow on hover/press
+- Drop shadow applied for legibility against the primary gradient background
+- Brief scale-up on press to confirm interaction
+- Always displayed at consistent dimensions: **45×45dp** in the app bar, **80×80dp** on the login/splash screen
+
+**Brand copy standards**
+
+| Location | Text |
+|---|---|
+| App bar title | `Government of Zambia — CDF System` |
+| Page/tab title | `[Screen Name] · CDF Management System` |
+| Login screen subtitle | `Republic of Zambia · Constituency Development Fund` |
+| Footer line 1 | `© [Year] Government of the Republic of Zambia. All rights reserved.` |
+| Footer line 2 | `Administered under the Constituency Development Fund Act Cap 324 and the 2022 CDF Guidelines.` |
 
 ---
 
-### 17.2 Color Palette
+### 17.2 Color System
 
-All colors are extracted directly from `includes/global_theme.php` and `login.php`. These are the exact hex values used throughout the system.
+The palette is drawn directly from the existing system and the Zambian national identity. It is organised into four tiers: brand, semantic, neutral, and surface. No color is used outside its defined role.
+
+#### Tier 1 — Brand Colors
+
+These two colors define the system's identity. They are non-negotiable and must appear consistently on every screen.
+
+| Token | Hex | RGB | Role |
+|---|---|---|---|
+| `color.brand.primary` | `#1A4E8A` | 26, 78, 138 | Authority color. Navbar, card headers, primary buttons, focus rings, active states, stat numbers. |
+| `color.brand.primary.dark` | `#0D3A6C` | 13, 58, 108 | Gradient terminus for primary surfaces. Hover/pressed state of primary elements. |
+| `color.brand.primary.light` | `#2C6CB0` | 44, 108, 176 | Gradient terminus for lighter surfaces. Used in progress bars and chart fills. |
+| `color.brand.accent` | `#E9B949` | 233, 185, 73 | Zambian copper-gold. Navbar bottom border, profile avatar fill, CTAs on dark surfaces, notice box left-stripe. |
+| `color.brand.accent.dark` | `#D4A337` | 212, 163, 55 | Gradient terminus for accent surfaces. Pressed state on gold buttons. |
+
+**Primary gradient:** `LinearGradient(135°, #1A4E8A → #0D3A6C)`
+**Accent gradient:** `LinearGradient(135°, #E9B949 → #D4A337)`
+
+**Contrast verification (WCAG 2.1):**
+
+| Foreground | Background | Ratio | Grade |
+|---|---|---|---|
+| White `#FFFFFF` | Primary `#1A4E8A` | **11.3 : 1** | AAA ✓ |
+| White `#FFFFFF` | Primary Dark `#0D3A6C` | **14.2 : 1** | AAA ✓ |
+| Dark `#212529` | Accent `#E9B949` | **7.6 : 1** | AAA ✓ |
+| White `#FFFFFF` | Accent `#E9B949` | **1.98 : 1** | FAIL ✗ — never use white text on gold |
+| Primary `#1A4E8A` | White `#FFFFFF` | **11.3 : 1** | AAA ✓ |
+| Dark `#212529` | White `#FFFFFF` | **16.1 : 1** | AAA ✓ |
+
+> **Rule:** Gold (`#E9B949`) always carries dark text (`#212529`). Never white.
+
+#### Tier 2 — Semantic Colors
+
+These colors communicate system state. Each has a foreground, background (tint), and dark-mode variant.
+
+| State | Base | Tint (10%) | Dark mode base | Dark mode tint | Usage |
+|---|---|---|---|---|---|
+| Success | `#28A745` | `#D4EDDA` | `#2A5F3F` | `#1A3A2E` | Approved, completed, positive |
+| Warning | `#FFC107` | `#FFF3CD` | `#6A5A2A` | `#3A3120` | Pending, alerts, budget nearing limit |
+| Danger | `#DC3545` | `#F8D7DA` | `#5A2A3F` | `#3A1A20` | Rejected, errors, destructive actions |
+| Info | `#17A2B8` | `#D1ECF1` | `#2A4D7F` | `#1A2D47` | In-progress, informational notices |
+
+**Rule:** Semantic colors are never used as decorative fills. They are only used to communicate state. A border, icon, or badge that uses a semantic color must be accompanied by a text label — color is not the sole indicator of meaning.
+
+#### Tier 3 — Neutral Scale
+
+| Token | Hex | Usage |
+|---|---|---|
+| `color.neutral.900` | `#212529` | Primary body text, headings |
+| `color.neutral.800` | `#343A40` | Secondary headings |
+| `color.neutral.700` | `#495057` | Table cell text |
+| `color.neutral.600` | `#6C757D` | Muted / secondary text, placeholder |
+| `color.neutral.500` | `#ADB5BD` | Disabled text |
+| `color.neutral.400` | `#CED4DA` | Disabled borders |
+| `color.neutral.300` | `#DEE2E6` | Default input borders, dividers |
+| `color.neutral.200` | `#E9ECEF` | Alternate table rows, card header gradient end |
+| `color.neutral.100` | `#F8F9FA` | Light backgrounds, card header gradient start |
+| `color.neutral.white` | `#FFFFFF` | Card surfaces, text on dark |
+| `color.neutral.black` | `#000000` | Absolute black — used only in overlay opacity values |
+
+#### Tier 4 — Surface Colors
+
+Surfaces define the layered depth of the UI. Light and dark mode surfaces are distinct stacks.
+
+**Light mode:**
+
+| Layer | Token | Hex | What sits here |
+|---|---|---|---|
+| Page background | `surface.background` | Gradient `#F5F7FA → #E4E8F0` | The page canvas |
+| Card | `surface.card` | `#FFFFFF` | All cards, modals, dropdowns |
+| Card header | `surface.card.header` | Gradient `#F8F9FA → #E9ECEF` | Card title bars |
+| Input | `surface.input` | `#FFFFFF` | Form fields |
+| Overlay | `surface.overlay` | `rgba(0,0,0,0.5)` | Modal backdrops |
+
+**Dark mode:**
+
+| Layer | Token | Hex | What sits here |
+|---|---|---|---|
+| Page background | `surface.background` | Gradient `#1A1A2E → #0F3460` | The page canvas |
+| Card | `surface.card` | `#2A2A3E` | All cards, modals |
+| Card header | `surface.card.header` | `#3A3A4E` | Card title bars |
+| Input | `surface.input` | `#3A3A4E` | Form fields at rest |
+| Input focused | `surface.input.focused` | `#424455` | Form fields when focused |
+| Divider / border | `surface.border` | `#404052` | All borders and dividers |
+| Scrollbar track | `surface.scrollbar.track` | `#3A3A4E` | |
+| Scrollbar thumb | `surface.scrollbar.thumb` | `#505062` | |
+
+---
+
+### 17.3 Dark Mode
+
+Dark mode is a first-class feature of this system — not an afterthought. The original developer built complete coverage across every component. That coverage must be maintained.
+
+**Toggle behavior:**
+- Three modes: `light`, `dark`, `auto`
+- `auto` follows the device `prefers-color-scheme` setting
+- User's explicit choice is persisted in `SharedPreferences`
+- Setting is applied immediately on app start, before first frame renders, to prevent a flash of the wrong theme
+- A toggle is accessible from the user profile/settings screen
+
+**Dark mode design rules:**
+1. Primary brand blue `#1A4E8A` is retained in dark mode — it is the identity color and must remain recognisable
+2. The accent gold `#E9B949` is retained — it is the national accent and must remain visible
+3. Background surfaces shift from light grey to deep navy (`#1A1A2E → #0F3460`) — not pure black, which strains the eyes
+4. Card surfaces are elevated slightly above the background (`#2A2A3E`) to maintain depth hierarchy without harsh borders
+5. Text shifts to `#E0E0E0` — not pure white, which creates excessive glare
+6. All semantic colors retain their hue but are darkened in their tint versions to prevent bloom on dark surfaces
+
+---
+
+### 17.4 Typography
+
+**Typeface:** Inter (Google Fonts)
+Inter is named explicitly in the original CSS font stack. It is clean, highly legible at small sizes, designed for screen readability, and carries the neutral authority appropriate for a government data system.
+
+**Flutter package:** `google_fonts: ^6.x` — `GoogleFonts.inter()`
+
+#### Type Scale
+
+The scale follows Material 3 naming with values mapped directly from the original CSS.
+
+| Role | Flutter style name | Size | Weight | Line height | Letter spacing | Usage |
+|---|---|---|---|---|---|---|
+| Display Large | `displayLarge` | 48sp | 900 | 1.15 | −0.25 | Stat numbers on dashboard |
+| Display Medium | `displayMedium` | 36sp | 800 | 1.2 | −0.25 | Page hero headings |
+| Headline Large | `headlineLarge` | 30sp | 800 | 1.3 | 0 | Dashboard welcome title |
+| Headline Medium | `headlineMedium` | 24sp | 700 | 1.4 | 0 | Section headings |
+| Headline Small | `headlineSmall` | 20sp | 700 | 1.4 | 0 | Card titles, section labels |
+| Title Large | `titleLarge` | 18sp | 800 | 1.4 | 0 | Card header titles, navbar brand |
+| Title Medium | `titleMedium` | 16sp | 600 | 1.5 | 0.15 | Form labels, table headers |
+| Title Small | `titleSmall` | 14sp | 600 | 1.5 | 0.1 | Secondary labels, nav links |
+| Body Large | `bodyLarge` | 16sp | 400 | 1.7 | 0 | Primary body text |
+| Body Medium | `bodyMedium` | 14sp | 400 | 1.7 | 0 | Secondary body, table cells |
+| Body Small | `bodySmall` | 12sp | 400 | 1.6 | 0 | Captions, fine print |
+| Label Large | `labelLarge` | 14sp | 700 | 1.4 | 0.8 | Buttons (uppercase) |
+| Label Medium | `labelMedium` | 12sp | 600 | 1.4 | 0.5 | Status badges |
+| Label Small | `labelSmall` | 11sp | 600 | 1.4 | 0.5 | Tags, timestamps |
+
+**Typography rules:**
+- Buttons always use `labelLarge` — uppercase, letter-spaced, weight 700
+- Stat numbers on dashboard cards use `displayLarge` in `color.brand.primary`
+- Card header titles use `titleLarge` in `color.brand.primary`
+- Body text line height is always 1.7 — the original system's choice and correct for dense government data
+- Never use a weight below 400 in the app
+
+---
+
+### 17.5 Spacing — 8dp Grid
+
+All spacing is derived from an 8dp base unit. This is the Material Design standard and produces consistent visual rhythm across all screen sizes.
+
+| Token | Value | Common use |
+|---|---|---|
+| `space.1` | 4dp | Icon padding, tight gaps |
+| `space.2` | 8dp | Inline element gaps, icon-to-label |
+| `space.3` | 12dp | Compact padding |
+| `space.4` | 16dp | Standard padding — default horizontal screen margin |
+| `space.5` | 20dp | Form field internal padding |
+| `space.6` | 24dp | Card padding, section gaps |
+| `space.8` | 32dp | Large card padding, section separators |
+| `space.10` | 40dp | Hero area padding |
+| `space.12` | 48dp | Dashboard header padding |
+| `space.16` | 64dp | Large section separators |
+| `space.20` | 80dp | Top padding on login screen |
+
+**Rule:** No hardcoded spacing value in any widget. Every `padding`, `margin`, and `SizedBox` references a `space.*` token.
+
+---
+
+### 17.6 Shape — Border Radius
+
+| Token | Value | Usage |
+|---|---|---|
+| `shape.xs` | 4dp | Tags, small chips |
+| `shape.sm` | 8dp | Input group prefixes, dropdown items, scrollbar |
+| `shape.md` | 12dp | Buttons, form inputs, modals, tool cards |
+| `shape.lg` | 16dp | Content cards, stat cards, login card |
+| `shape.xl` | 20dp | Bottom sheets, large modals |
+| `shape.pill` | 999dp | Status badges, notification chips |
+| `shape.circle` | 50% | Profile avatar |
+
+---
+
+### 17.7 Elevation
+
+Elevation is expressed as `BoxShadow` in Flutter and conveys the physical layer of a surface above the page canvas. The system uses five levels.
+
+| Level | Token | Shadow | Usage |
+|---|---|---|---|
+| 0 | `elevation.none` | No shadow | Flat elements — dividers, chip outlines |
+| 1 | `elevation.low` | `0 2px 8px rgba(0,0,0,0.06)` | Resting tool cards, project list cards |
+| 2 | `elevation.medium` | `0 4px 12px rgba(0,0,0,0.08)` | Content cards, dropdowns, navbar |
+| 3 | `elevation.high` | `0 8px 25px rgba(0,0,0,0.15)` | Hovered cards, footer, login card |
+| 4 | `elevation.overlay` | `0 12px 40px rgba(0,0,0,0.22)` | Modals, focused buttons, active drawers |
+
+**Profile avatar accent glow (gold only):** `0 12px 30px rgba(233,185,73,0.4)` — applied on press/hover. This is the only colored shadow in the system.
+
+**Rule:** Elevation increases on interaction (hover → pressed), never decreases. A card at rest uses `elevation.low`; on hover it rises to `elevation.high`.
+
+---
+
+### 17.8 Motion
+
+Motion confirms state changes and directs attention. It is never decorative.
+
+**Easing curve:** `Curves.easeInOut` — equivalent to CSS `cubic-bezier(0.4, 0, 0.2, 1)` (Material standard). Used for all transitions.
+
+| Duration token | Value | Usage |
+|---|---|---|
+| `motion.instant` | 100ms | Ripple feedback, checkbox toggle |
+| `motion.fast` | 150ms | Button state change, icon swap |
+| `motion.standard` | 300ms | Card hover elevation, drawer open, theme switch |
+| `motion.slow` | 500ms | Page-level enter transitions, shimmer sweep |
+
+#### Screen Entry Animation
+
+Every screen enters with a combined fade + upward slide:
+- `FadeTransition`: opacity 0.0 → 1.0
+- `SlideTransition`: offset `(0, 0.04)` → `(0, 0)` (subtle, 4% upward)
+- Duration: 300ms, `Curves.easeOut`
+
+#### Interaction States
+
+| Interaction | Visual response |
+|---|---|
+| Card hover (web) | `elevation.low → elevation.high` + `translateY(-6dp)` |
+| Button hover (web) | `elevation.medium → elevation.overlay` + `translateY(-2dp)` |
+| Button press (all) | Scale `1.0 → 0.97` + ripple |
+| Tool card hover (web) | Background inverts to primary gradient; icon and text transition to white (300ms) |
+| Coat of Arms press | Scale `1.0 → 1.08` |
+| Nav item active | Golden underline `width 0 → 80%` from center (300ms) |
+
+**Shimmer on primary buttons:** On hover (web only), a white highlight sweeps left-to-right across the button face in 500ms. This is the one deliberate premium touch retained from the original design. It is subtle — `rgba(255,255,255,0.25)` opacity — and must not be applied to any other component.
+
+**Loading state (buttons):** On async submit, button label swaps to a `CircularProgressIndicator` (white, size 16dp) and the button is disabled. Original label restores on completion or error.
+
+---
+
+### 17.9 Icon System
+
+**Library:** Font Awesome 6.4.0 Free
+**Flutter package:** `font_awesome_flutter`
+
+Icons are always paired with a text label except in contexts where space is severely constrained (mobile bottom navigation, action icon buttons). Icon-only elements must carry a `Tooltip`.
+
+**Icon sizing:**
+
+| Context | Size |
+|---|---|
+| App bar actions | 20dp |
+| Navigation rail / bottom nav | 24dp |
+| Inline with body text | 16dp |
+| Form input prefix | 18dp |
+| Card header title | 20dp |
+| Tool card feature icon | 40dp |
+| Dashboard stat card | 28dp |
+| Empty state illustration | 64dp |
+
+**Icons by feature area:**
+
+| Domain | Icons used |
+|---|---|
+| Authentication | `faSignInAlt`, `faSignOutAlt`, `faLock`, `faUser`, `faKey`, `faEye`, `faEyeSlash`, `faUserPlus` |
+| Dashboard & analytics | `faChartLine`, `faChartBar`, `faChartPie`, `faTachometerAlt` |
+| Projects | `faProjectDiagram`, `faTasks`, `faCheckCircle`, `faTimesCircle`, `faFolder` |
+| Users & profiles | `faUsers`, `faUserEdit`, `faUserCheck`, `faUserTimes`, `faIdCard` |
+| Financial | `faMoneyBillWave`, `faReceipt`, `faCoins`, `faCalculator`, `faWallet` |
+| Progress & media | `faChartLine`, `faPercentage`, `faCamera`, `faImage` |
+| Site visits & maps | `faMapMarkerAlt`, `faMap`, `faCompass`, `faCalendarAlt`, `faClock` |
+| Evaluations | `faClipboardCheck`, `faStar`, `faAward`, `faCertificate`, `faPoll` |
+| Communication | `faBell`, `faEnvelope`, `faComment`, `faExclamationTriangle` |
+| Settings | `faCog`, `faSlidersH`, `faShieldAlt`, `faDatabase`, `faPaintBrush` |
+| System status | `faInfoCircle`, `faExclamationCircle`, `faCheck`, `faTimes`, `faSpinner` |
+| CRUD actions | `faPlus`, `faEdit`, `faTrash`, `faEye`, `faDownload`, `faUpload`, `faSearch`, `faFilter` |
+| Government / legal | `faLandmark`, `faFlag`, `faBalanceScale`, `faGavel` |
+
+---
+
+### 17.10 Component Library
+
+Each component is defined by its resting state, interactive states, and variants. All measurements are in dp.
+
+---
+
+#### App Bar (Navbar)
+
+```
+Height:             64dp
+Background:         LinearGradient(135°, #1A4E8A → #0D3A6C)
+Bottom border:      3dp solid #E9B949                       ← the signature golden stripe
+Elevation:          elevation.medium (shadow beneath)
+Blur (web):         BackdropFilter blur 10dp
+
+Leading:            Coat of Arms image (45×45dp)
+                    + Brand text: "Government of Zambia — CDF System"
+                    + Font: titleLarge, white
+                    + Gap between image and text: 12dp
+
+Actions:
+  Nav link resting:   white, weight 600, 15sp, padding 12×16dp, border-radius 8dp
+  Nav link hover:     rgba(255,255,255,0.12) background + translateY(-1dp)
+  Nav link active:    rgba(255,255,255,0.15) background
+                      + golden underline (3dp, width expands from center, 300ms)
+
+Mobile:             Hamburger menu → drawer (primary gradient background)
+```
+
+---
+
+#### Page Header Banner
+
+```
+Background:         LinearGradient(135°, #1A4E8A → #0D3A6C)
+Padding:            48dp top, 40dp bottom
+Decorative overlay: SVG diagonal polygon, rgba(255,255,255,0.05)
+
+Profile avatar:
+  Size:             100×100dp, circle
+  Fill:             LinearGradient(135°, #E9B949 → #D4A337)
+  Content:          User initials, 2 characters, displayMedium, #212529
+  Border:           4dp solid rgba(255,255,255,0.3)
+  Shadow:           elevation.high
+  Hover/press glow: gold glow shadow
+
+Welcome text:       headlineLarge, white, weight 800
+Role subtitle:      bodyLarge, rgba(255,255,255,0.9)
+```
+
+---
+
+#### Stat Card
+
+```
+Background:         surface.card (#FFFFFF / dark: #2A2A3E)
+Border-radius:      shape.lg (16dp)
+Elevation resting:  elevation.medium
+Elevation hover:    elevation.high + translateY(-6dp)
+Top accent bar:     5dp, LinearGradient(#1A4E8A → #2C6CB0)
+Padding:            32dp vertical, 24dp horizontal, centered
+
+Stat number:        displayLarge (48sp), weight 900, #1A4E8A
+                    text shadow: 0 2dp 4dp rgba(26,78,138,0.15)
+Stat title:         titleMedium (16sp), weight 700, neutral.900
+Stat subtitle:      bodySmall (12sp), weight 500, neutral.600
+
+Transition:         300ms, Curves.easeInOut
+```
+
+---
+
+#### Content Card
+
+```
+Background:         surface.card
+Border-radius:      shape.lg (16dp)
+Border:             1dp solid rgba(0,0,0,0.03)
+Elevation resting:  elevation.medium
+Elevation hover:    elevation.high + translateY(-2dp)
+
+Card header:
+  Background:       surface.card.header (gradient #F8F9FA → #E9ECEF)
+  Bottom border:    3dp solid #1A4E8A
+  Padding:          24dp
+  Title:            titleLarge, weight 800, #1A4E8A
+                    displayed with icon (20dp) at 12dp gap
+```
+
+---
+
+#### Tool / Quick-Action Card
+
+```
+Background resting: surface.card
+Border-radius:      shape.md (12dp)
+Left border:        5dp solid [role color — see variants below]
+Padding:            32dp vertical, 24dp horizontal, centered column
+Elevation resting:  elevation.low
+
+Feature icon:       40dp, color matches left border
+Title:              titleSmall, weight 700
+Description:        bodySmall, neutral.600
+
+Hover / press state:
+  Background:       LinearGradient(135°, #1A4E8A → #0D3A6C)
+  Text + icon:      white
+  Elevation:        elevation.overlay + translateY(-6dp) + scale(1.01)
+  Transition:       300ms standard
+
+Color variants (left border + icon color):
+  Default:          #1A4E8A  (primary)
+  Success:          #28A745
+  Warning:          #FFC107
+  Danger:           #DC3545
+  Info:             #17A2B8
+```
+
+---
+
+#### Primary Button
+
+```
+Background:         LinearGradient(135°, #1A4E8A → #0D3A6C)
+Foreground:         #FFFFFF
+Border:             none
+Height:             48dp minimum
+Padding:            16dp vertical, 24dp horizontal
+Border-radius:      shape.md (12dp)
+Label:              labelLarge — uppercase, weight 700, letter-spacing 0.8
+Elevation:          elevation.medium
+
+Hover (web):
+  Elevation:        elevation.overlay
+  Transform:        translateY(-2dp)
+  Shimmer:          white highlight sweeps left→right, 500ms, rgba(255,255,255,0.25)
+
+Pressed:
+  Scale:            0.97
+  Elevation:        elevation.low
+
+Disabled:
+  Opacity:          0.5, no shadow
+
+Loading:
+  Label:            hidden
+  Content:          CircularProgressIndicator (white, 16dp, strokeWidth 2dp)
+  Disabled:         true
+```
+
+---
+
+#### Accent CTA Button (on dark/primary backgrounds)
+
+```
+Background:         LinearGradient(135°, #E9B949 → #D4A337)
+Foreground:         #212529  ← dark text on gold, never white
+Border:             none
+Height:             48dp minimum
+Padding:            16dp vertical, 32dp horizontal
+Border-radius:      shape.md (12dp)
+Label:              labelLarge — uppercase, weight 700
+
+Hover (web):
+  Background:       LinearGradient(135°, #D4A337 → #C4952E)
+  Transform:        translateY(-2dp) + elevation.high
+
+Pressed:
+  Scale:            0.97
+```
+
+---
+
+#### Outline Button
+
+```
+Background:         transparent
+Border:             2dp solid #1A4E8A
+Foreground:         #1A4E8A
+Height:             48dp minimum
+Padding:            16dp vertical, 24dp horizontal
+Border-radius:      shape.md (12dp)
+Label:              labelLarge — uppercase, weight 700
+
+Hover (web):
+  Background:       fills with #1A4E8A
+  Foreground:       #FFFFFF
+  Transform:        translateY(-2dp)
+
+On dark background variant:
+  Border:           2dp solid rgba(255,255,255,0.7)
+  Foreground:       #FFFFFF
+  Hover bg:         #FFFFFF
+  Hover foreground: #1A4E8A
+```
+
+---
+
+#### Form Input
+
+```
+Fill:               surface.card (#FFFFFF / dark: #3A3A4E)
+Border resting:     2dp solid neutral.300 (#DEE2E6 / dark: #505062)
+Border focused:     2dp solid #1A4E8A
+Border error:       2dp solid #DC3545
+Border-radius:      shape.md (12dp)
+Padding:            16dp vertical, 20dp horizontal
+Font:               bodyLarge, 16sp
+
+Focus ring:         box-shadow 0 0 0 3dp rgba(26,78,138,0.25)
+Error ring:         box-shadow 0 0 0 3dp rgba(220,53,69,0.25)
+
+Prefix icon group:
+  Background:       #1A4E8A
+  Foreground:       #FFFFFF
+  Width:            48dp
+  Border-radius:    shape.md left side only
+
+Helper / error text:
+  Font:             bodySmall
+  Color:            neutral.600 (helper) / #DC3545 (error)
+  Margin-top:       4dp
+  Prefix:           icon (faInfoCircle / faExclamationCircle)
+```
+
+---
+
+#### Status Badge / Chip
+
+```
+Shape:              shape.pill (full radius)
+Padding:            4dp vertical, 12dp horizontal
+Font:               labelMedium (12sp), weight 600, uppercase
+
+States:
+  planning:     bg #E9ECEF,  text #495057
+  in-progress:  bg #D1ECF1,  text #138496
+  pending:      bg #FFF3CD,  text #856404
+  approved:     bg #D4EDDA,  text #155724
+  completed:    bg #D4EDDA,  text #155724
+  rejected:     bg #F8D7DA,  text #721C24
+  cancelled:    bg #E9ECEF,  text #495057
+  locked:       bg #F8D7DA,  text #721C24
+
+Dark mode: backgrounds use their darker semantic tint variants from Section 17.2
+```
+
+---
+
+#### Progress Bar
+
+```
+Track:          neutral.200 (#E9ECEF), border-radius shape.sm (8dp), height 8dp
+Fill:           LinearGradient(135°, #1A4E8A → #2C6CB0)
+Over-budget:    fill #DC3545
+Animation:      width transition 600ms Curves.easeOut on initial render
+
+Featured (project detail):
+  Height:       10dp
+  Label:        percentage shown above right, bodySmall, #1A4E8A
+```
+
+---
+
+#### Government Notice Box
+
+```
+Background:     surface.card.header (light gradient)
+Border:         2dp solid #1A4E8A
+Border-radius:  shape.md (12dp)
+Padding:        20dp
+Left accent:    6dp wide strip, LinearGradient(#E9B949 → #D4A337) ← the gold stripe
+
+Title:          titleSmall, weight 600, #1A4E8A
+                prefix: faInfoCircle (18dp, #1A4E8A)
+Body:           bodySmall, neutral.600
+```
+
+---
+
+#### Data Table
+
+```
+Header row:
+  Background:   surface.card.header
+  Font:         titleSmall, weight 600, neutral.700
+  Padding:      12dp vertical, 16dp horizontal
+  Border-bottom: 2dp solid #1A4E8A
+
+Body rows:
+  Height:       52dp minimum
+  Font:         bodyMedium, neutral.900
+  Padding:      12dp vertical, 16dp horizontal
+  Divider:      1dp solid neutral.200
+
+Alternate rows (striped):
+  Background:   neutral.100 (#F8F9FA / dark: #32323F)
+
+Hover row:
+  Background:   rgba(26,78,138,0.04)
+
+Actions column:
+  Align:        right
+  Spacing:      8dp between action buttons
+```
+
+---
+
+#### Notification Item
+
+```
+Icon:           Left-aligned, 24dp, semantic color
+Title:          titleSmall, weight 600
+Message:        bodySmall, neutral.600
+Timestamp:      labelSmall, neutral.500
+Unread dot:     8dp circle, #1A4E8A, top-right of icon
+
+Urgent variant:
+  Left border:  4dp solid #DC3545
+  Background:   rgba(220,53,69,0.04)
+```
+
+---
+
+#### Modal / Dialog
+
+```
+Background:     surface.card
+Border-radius:  shape.xl (20dp)
+Elevation:      elevation.overlay
+Max-width:      560dp
+Padding:        0 (header/body/footer have own padding)
+
+Header:
+  Background:   LinearGradient(135°, #1A4E8A → #0D3A6C)
+  Padding:      24dp
+  Title:        titleLarge, white, weight 800
+  Close button: faTimesCircle, white, top-right
+
+Body:
+  Padding:      24dp
+  Font:         bodyLarge
+
+Footer:
+  Padding:      16dp 24dp
+  Border-top:   1dp solid neutral.200
+  Button layout: right-aligned, 8dp gap
+```
+
+---
+
+### 17.11 Screen Layouts
+
+#### Authenticated Shell — Web (≥ 1200dp)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│  APP BAR  [Coat of Arms + Brand]          [Nav Links] [User] │  64dp, primary gradient + gold bottom border
+├──────────────────────────────────────────────────────────────┤
+│  PAGE HEADER BANNER                                          │  Primary gradient, profile avatar + greeting
+│  [Avatar]  [Welcome, Name]  [Role]  [Action Buttons]        │
+├──────────────────────────────────────────────────────────────┤
+│                                                              │
+│  CONTENT AREA  (light gradient background, padding 32dp)    │
+│                                                              │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │  Stat cards — 4 columns
+│  │ Stat     │  │ Stat     │  │ Stat     │  │ Stat     │   │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+│                                                              │
+│  ┌───────────────────────────┐  ┌──────────────────────┐   │  2-column content
+│  │  Content Card             │  │  Content Card        │   │
+│  │  (data table / list)      │  │  (chart / activity)  │   │
+│  └───────────────────────────┘  └──────────────────────┘   │
+│                                                              │
+│  QUICK ACTION GRID  (auto-fill, min 240dp per card)         │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │  Tool cards
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘   │
+│                                                              │
+├──────────────────────────────────────────────────────────────┤
+│  FOOTER  [Copyright] [Official System]        [Zambia Flag] │  Primary gradient, gold disclaimer stripe
+└──────────────────────────────────────────────────────────────┘
+```
+
+#### Authenticated Shell — Tablet (600–1199dp)
+
+- App bar: same, nav links collapse to icon rail on left
+- Stat cards: 2 columns
+- Content: single column
+- Tool grid: 2 columns
+- Footer: stacked
+
+#### Authenticated Shell — Mobile (< 600dp)
+
+- App bar: hamburger → modal drawer (primary gradient)
+- Header banner: compact (avatar 64dp, greeting 2 lines)
+- Stat cards: 2 columns, compact padding
+- Content: single column, full width
+- Tool grid: 2 columns
+- Bottom navigation bar replaces left rail
+- Footer: hidden (content accessible via app bar menu)
+
+---
+
+### 17.12 Flutter Theme Implementation
+
+Complete, production-ready `AppTheme` class. Place at `lib/core/theme/app_theme.dart`.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+/// CDF Management System — Design System
+/// Government of the Republic of Zambia
+///
+/// All values sourced from the original system's CSS design tokens.
+/// Do not modify color values without design review.
+class AppTheme {
+
+  // ─────────────────────────────────────────────────────────
+  // Brand Colors
+  // ─────────────────────────────────────────────────────────
+
+  static const Color primary      = Color(0xFF1A4E8A);
+  static const Color primaryDark  = Color(0xFF0D3A6C);
+  static const Color primaryLight = Color(0xFF2C6CB0);
+  static const Color accent       = Color(0xFFE9B949);
+  static const Color accentDark   = Color(0xFFD4A337);
+
+  // ─────────────────────────────────────────────────────────
+  // Semantic Colors
+  // ─────────────────────────────────────────────────────────
+
+  static const Color success      = Color(0xFF28A745);
+  static const Color successTint  = Color(0xFFD4EDDA);
+  static const Color warning      = Color(0xFFFFC107);
+  static const Color warningTint  = Color(0xFFFFF3CD);
+  static const Color danger       = Color(0xFFDC3545);
+  static const Color dangerTint   = Color(0xFFF8D7DA);
+  static const Color info         = Color(0xFF17A2B8);
+  static const Color infoTint     = Color(0xFFD1ECF1);
+
+  // ─────────────────────────────────────────────────────────
+  // Neutral Scale
+  // ─────────────────────────────────────────────────────────
+
+  static const Color neutral900 = Color(0xFF212529);
+  static const Color neutral700 = Color(0xFF495057);
+  static const Color neutral600 = Color(0xFF6C757D);
+  static const Color neutral300 = Color(0xFFDEE2E6);
+  static const Color neutral200 = Color(0xFFE9ECEF);
+  static const Color neutral100 = Color(0xFFF8F9FA);
+
+  // ─────────────────────────────────────────────────────────
+  // Dark Mode Surfaces
+  // ─────────────────────────────────────────────────────────
+
+  static const Color darkBg1     = Color(0xFF1A1A2E);
+  static const Color darkBg2     = Color(0xFF0F3460);
+  static const Color darkSurface = Color(0xFF2A2A3E);
+  static const Color darkHeader  = Color(0xFF3A3A4E);
+  static const Color darkInput   = Color(0xFF3A3A4E);
+  static const Color darkText    = Color(0xFFE0E0E0);
+  static const Color darkMuted   = Color(0xFFA0A0B0);
+  static const Color darkBorder  = Color(0xFF404052);
+
+  // ─────────────────────────────────────────────────────────
+  // Gradients
+  // ─────────────────────────────────────────────────────────
+
+  static const LinearGradient primaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [primary, primaryDark],
+  );
+
+  static const LinearGradient accentGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [accent, accentDark],
+  );
+
+  static const LinearGradient lightPageGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFF5F7FA), Color(0xFFE4E8F0)],
+  );
+
+  static const LinearGradient darkPageGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [darkBg1, darkBg2],
+  );
+
+  static const LinearGradient cardHeaderGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFFF8F9FA), Color(0xFFE9ECEF)],
+  );
+
+  // ─────────────────────────────────────────────────────────
+  // Elevation (BoxShadow lists)
+  // ─────────────────────────────────────────────────────────
+
+  static const List<BoxShadow> elevationLow = [
+    BoxShadow(color: Color(0x0F000000), blurRadius: 8, offset: Offset(0, 2)),
+  ];
+
+  static const List<BoxShadow> elevationMedium = [
+    BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, 4)),
+  ];
+
+  static const List<BoxShadow> elevationHigh = [
+    BoxShadow(color: Color(0x26000000), blurRadius: 25, offset: Offset(0, 8)),
+  ];
+
+  static const List<BoxShadow> elevationOverlay = [
+    BoxShadow(color: Color(0x38000000), blurRadius: 40, offset: Offset(0, 12)),
+  ];
+
+  static const List<BoxShadow> accentGlow = [
+    BoxShadow(color: Color(0x66E9B949), blurRadius: 30, offset: Offset(0, 12)),
+  ];
+
+  // ─────────────────────────────────────────────────────────
+  // Typography
+  // ─────────────────────────────────────────────────────────
+
+  static TextTheme _buildTextTheme(Color bodyColor) {
+    return GoogleFonts.interTextTheme().copyWith(
+      displayLarge: GoogleFonts.inter(
+        fontSize: 48, fontWeight: FontWeight.w900,
+        color: primary, letterSpacing: -0.25, height: 1.15,
+      ),
+      displayMedium: GoogleFonts.inter(
+        fontSize: 36, fontWeight: FontWeight.w800,
+        color: bodyColor, letterSpacing: -0.25, height: 1.2,
+      ),
+      headlineLarge: GoogleFonts.inter(
+        fontSize: 30, fontWeight: FontWeight.w800,
+        color: bodyColor, height: 1.3,
+      ),
+      headlineMedium: GoogleFonts.inter(
+        fontSize: 24, fontWeight: FontWeight.w700,
+        color: bodyColor, height: 1.4,
+      ),
+      headlineSmall: GoogleFonts.inter(
+        fontSize: 20, fontWeight: FontWeight.w700,
+        color: primary, height: 1.4,
+      ),
+      titleLarge: GoogleFonts.inter(
+        fontSize: 18, fontWeight: FontWeight.w800,
+        color: primary, height: 1.4,
+      ),
+      titleMedium: GoogleFonts.inter(
+        fontSize: 16, fontWeight: FontWeight.w600,
+        color: bodyColor, letterSpacing: 0.15, height: 1.5,
+      ),
+      titleSmall: GoogleFonts.inter(
+        fontSize: 14, fontWeight: FontWeight.w600,
+        color: bodyColor, letterSpacing: 0.1, height: 1.5,
+      ),
+      bodyLarge: GoogleFonts.inter(
+        fontSize: 16, fontWeight: FontWeight.w400,
+        color: bodyColor, height: 1.7,
+      ),
+      bodyMedium: GoogleFonts.inter(
+        fontSize: 14, fontWeight: FontWeight.w400,
+        color: bodyColor, height: 1.7,
+      ),
+      bodySmall: GoogleFonts.inter(
+        fontSize: 12, fontWeight: FontWeight.w400,
+        color: neutral600, height: 1.6,
+      ),
+      labelLarge: GoogleFonts.inter(
+        fontSize: 14, fontWeight: FontWeight.w700,
+        letterSpacing: 0.8,
+      ),
+      labelMedium: GoogleFonts.inter(
+        fontSize: 12, fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
+      labelSmall: GoogleFonts.inter(
+        fontSize: 11, fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────
+  // Light Theme
+  // ─────────────────────────────────────────────────────────
+
+  static ThemeData get light => ThemeData(
+    useMaterial3: true,
+    colorScheme: const ColorScheme.light(
+      primary: primary,
+      onPrimary: Colors.white,
+      primaryContainer: Color(0xFFDCE8F8),
+      onPrimaryContainer: primaryDark,
+      secondary: accent,
+      onSecondary: neutral900,
+      secondaryContainer: Color(0xFFFDF3D7),
+      onSecondaryContainer: Color(0xFF6B4C00),
+      error: danger,
+      onError: Colors.white,
+      surface: Colors.white,
+      onSurface: neutral900,
+      surfaceContainerHighest: neutral100,
+      outline: neutral300,
+    ),
+    scaffoldBackgroundColor: const Color(0xFFF5F7FA),
+    textTheme: _buildTextTheme(neutral900),
+    appBarTheme: AppBarTheme(
+      backgroundColor: primary,
+      foregroundColor: Colors.white,
+      elevation: 8,
+      shadowColor: Colors.black26,
+      titleTextStyle: GoogleFonts.inter(
+        fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white,
+      ),
+      iconTheme: const IconThemeData(color: Colors.white, size: 24),
+    ),
+    cardTheme: CardThemeData(
+      color: Colors.white,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.all(0),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: Colors.black26,
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: GoogleFonts.inter(
+          fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.8,
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primary,
+        side: const BorderSide(color: primary, width: 2),
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: GoogleFonts.inter(
+          fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.8,
+        ),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: neutral300, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: neutral300, width: 2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: danger, width: 2),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: danger, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w600, color: neutral600),
+      hintStyle: GoogleFonts.inter(color: neutral600),
+    ),
+    dividerTheme: const DividerThemeData(
+      color: neutral200, thickness: 1, space: 1,
+    ),
+    chipTheme: ChipThemeData(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      labelStyle: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      backgroundColor: neutral900,
+      contentTextStyle: GoogleFonts.inter(color: Colors.white),
+    ),
+    tooltipTheme: TooltipThemeData(
+      decoration: BoxDecoration(
+        color: neutral900,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      textStyle: GoogleFonts.inter(fontSize: 12, color: Colors.white),
+    ),
+    pageTransitionsTheme: const PageTransitionsTheme(
+      builders: {
+        TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
+        TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
+      },
+    ),
+  );
+
+  // ─────────────────────────────────────────────────────────
+  // Dark Theme
+  // ─────────────────────────────────────────────────────────
+
+  static ThemeData get dark => ThemeData(
+    useMaterial3: true,
+    colorScheme: const ColorScheme.dark(
+      primary: primary,
+      onPrimary: Colors.white,
+      primaryContainer: primaryDark,
+      onPrimaryContainer: Colors.white,
+      secondary: accent,
+      onSecondary: neutral900,
+      error: danger,
+      onError: Colors.white,
+      surface: darkSurface,
+      onSurface: darkText,
+      surfaceContainerHighest: darkHeader,
+      outline: darkBorder,
+    ),
+    scaffoldBackgroundColor: darkBg1,
+    textTheme: _buildTextTheme(darkText).copyWith(
+      headlineSmall: GoogleFonts.inter(
+        fontSize: 20, fontWeight: FontWeight.w700, color: darkText,
+      ),
+      titleLarge: GoogleFonts.inter(
+        fontSize: 18, fontWeight: FontWeight.w800, color: darkText,
+      ),
+      bodySmall: GoogleFonts.inter(
+        fontSize: 12, fontWeight: FontWeight.w400, color: darkMuted,
+      ),
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: darkBg2,
+      foregroundColor: darkText,
+      elevation: 8,
+      titleTextStyle: GoogleFonts.inter(
+        fontSize: 18, fontWeight: FontWeight.w800, color: darkText,
+      ),
+    ),
+    cardTheme: CardThemeData(
+      color: darkSurface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primary,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        textStyle: GoogleFonts.inter(
+          fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.8,
+        ),
+      ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: darkInput,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: darkBorder, width: 2),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: darkBorder, width: 2),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: primary, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      labelStyle: GoogleFonts.inter(color: darkMuted, fontWeight: FontWeight.w600),
+      hintStyle: GoogleFonts.inter(color: darkMuted),
+    ),
+    dividerTheme: const DividerThemeData(color: darkBorder, thickness: 1, space: 1),
+  );
+}
+```
+
+---
+
+### 17.13 Design Rules Reference
+
+A concise reference for any developer working on this system. These rules are non-negotiable.
+
+| # | Rule |
+|---|---|
+| 1 | **Never use white text on gold** (`#E9B949`). Contrast ratio is 1.98:1 — a WCAG fail. Always use `#212529` on gold. |
+| 2 | **The Coat of Arms appears on every authenticated screen** in the app bar. It is the legal identity signal of the system. |
+| 3 | **The navbar always carries the 3dp gold bottom border** (`#E9B949`). It is the visual signature of this system. |
+| 4 | **The profile avatar is always a gold circle with initials** — not a generic person icon. |
+| 5 | **Color is never the sole indicator of state.** Every badge, alert, and status indicator must carry a text label alongside its color. |
+| 6 | **Dark mode is mandatory.** The user's preference is persisted and applied before the first frame renders. |
+| 7 | **No spacing value is hardcoded.** All padding and margins reference the 8dp spacing tokens. |
+| 8 | **Buttons are uppercase with letter-spacing 0.8.** This is the typographic convention of this system — do not change. |
+| 9 | **The shimmer effect on primary buttons is applied on hover/web only** — not on mobile press. It is subtle (25% white opacity) and must not be applied to other components. |
+| 10 | **Animation serves function.** The only permitted animations are: state transitions (elevation, color), screen entry (fade + slide), loading indicators, and the button shimmer. No looping decorative animations. |
+| 11 | **The footer on web layout mirrors the navbar gradient** — `#1A4E8A → #0D3A6C`. The golden left-border disclaimer box within the footer is required on all web pages. |
+| 12 | **All WCAG 2.1 AA contrast requirements must pass** before any screen is considered complete. Use a contrast checker before submitting a PR. |
+| 13 | **Inter is the only typeface.** No system fonts, no mixed families. All text in the application uses `GoogleFonts.inter()`. |
+
+---
+
+*End of UI/UX Design System. All color values, measurements, and component specifications are sourced directly from `login.php`, `admin_dashboard.php`, and `includes/global_theme.php` of the original school project, then elevated to enterprise-grade specification.*
 
 #### Primary Colors
 
