@@ -51,6 +51,11 @@ if (isset($_GET['action'])) {
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error_message'] = "Invalid request. Please try again.";
+        redirect('users.php');
+        exit;
+    }
     if (isset($_POST['create_user'])) {
         // Create new user
         $userData = [
@@ -1066,6 +1071,7 @@ $pageTitle = "User Management - CDF Management System";
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="users.php">
+                    <?= csrfField() ?>
                     <div class="modal-body">
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -1125,6 +1131,7 @@ $pageTitle = "User Management - CDF Management System";
                     <a href="users.php" class="btn-close"></a>
                 </div>
                 <form method="POST" action="users.php">
+                    <?= csrfField() ?>
                     <input type="hidden" name="user_id" value="<?php echo $editUser['id']; ?>">
                     <div class="modal-body">
                         <div class="row">
@@ -1187,6 +1194,7 @@ $pageTitle = "User Management - CDF Management System";
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="users.php">
+                    <?= csrfField() ?>
                     <input type="hidden" name="user_id" id="resetPasswordUserId">
                     <div class="modal-body">
                         <p>Are you sure you want to reset the password for <strong id="resetPasswordUserName"></strong>?</p>

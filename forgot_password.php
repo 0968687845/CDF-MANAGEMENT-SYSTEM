@@ -23,27 +23,35 @@ $error = '';
 
 // Process forgot password form
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'] ?? '';
-    
-    // Basic validation
-    if (empty($email)) {
-        $error = "Please enter your email address";
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = "Please enter a valid email address";
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $error = "Invalid request. Please try again.";
     } else {
-        // Check if email exists in the system
-        if (emailExists($email)) {
-            // Generate reset token and send email (simulated for now)
-            $resetToken = generateResetToken();
-            $result = sendPasswordResetEmail($email, $resetToken);
-            
-            if ($result === true) {
-                $success = "Password reset instructions have been sent to your email address. Please check your inbox and follow the instructions to reset your password.";
-            } else {
-                $error = "Failed to send reset email. Please try again later or contact support.";
-            }
+        $email = $_POST['email'] ?? '';
+
+        if (empty($email)) {
+            $error = "Please enter your email address";
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = "Please enter a valid email address";
         } else {
-            $error = "No account found with this email address. Please check your email or register for a new account.";
+            // Rate limit: max 3 reset requests per email per 15 minutes
+            global $pdo;
+            $stmt = $pdo->prepare("SELECT COUNT(*) FROM password_resets WHERE email = ? AND created_at > DATE_SUB(NOW(), INTERVAL 15 MINUTE)");
+            $stmt->execute([$email]);
+            if ($stmt->fetchColumn() >= 3) {
+                $error = "Too many reset requests. Please wait 15 minutes before trying again.";
+            } elseif (emailExists($email)) {
+                $resetToken = generateResetToken();
+                $result = sendPasswordResetEmail($email, $resetToken);
+
+                if ($result === true) {
+                    $success = "Password reset instructions have been sent to your email address. Please check your inbox and follow the instructions to reset your password.";
+                } else {
+                    $error = "Failed to send reset email. Please try again later or contact support.";
+                }
+            } else {
+                // Generic message to avoid email enumeration
+                $success = "If an account exists for that email, reset instructions have been sent.";
+            }
         }
     }
 }
@@ -657,6 +665,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-section">
                     <h5 class="section-title"><i class="fas fa-unlock-alt"></i>Reset Your Password</h5>
                     <form method="POST">
+                        <?= csrfField() ?>
                         <div class="mb-4">
                             <label for="email" class="form-label fw-semibold">Email Address</label>
                             <div class="input-group">

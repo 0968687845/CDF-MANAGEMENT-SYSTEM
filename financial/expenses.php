@@ -21,6 +21,11 @@ if ($selected_project_id) {
 
 // Handle expense submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_expense'])) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect(basename($_SERVER['PHP_SELF']));
+        exit;
+    }
     $expense_data = [
         'project_id' => $selected_project_id,
         'amount' => floatval($_POST['amount']),
@@ -970,6 +975,7 @@ $pageTitle = "Project Expenses - CDF Management System";
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Amount (ZMW) <span class="text-danger">*</span></label>
+                                    <?= csrfField() ?>
                                 <input type="number" class="form-control <?php echo isset($errors['amount']) ? 'is-invalid' : ''; ?>" 
                                        name="amount" step="0.01" min="0.01" required 
                                        placeholder="Enter expense amount"

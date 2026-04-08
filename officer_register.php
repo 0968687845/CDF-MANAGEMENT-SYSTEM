@@ -377,6 +377,7 @@ $pageTitle = "M&E Officer Registration - CDF Management System";
                 </div>
                 
                 <form method="POST" action="auth.php">
+                    <?= csrfField() ?>
                     <input type="hidden" name="role" value="officer">
                     
                     <!-- Personal Information Section -->

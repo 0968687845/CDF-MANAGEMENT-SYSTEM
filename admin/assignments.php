@@ -40,6 +40,11 @@ if (isset($_GET['action'])) {
 
 // Handle bulk assignments
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect(basename($_SERVER['PHP_SELF']));
+        exit;
+    }
     if (isset($_POST['bulk_assign'])) {
         $projectIds = $_POST['project_ids'] ?? [];
         $officerId = $_POST['officer_id'];
@@ -1134,6 +1139,7 @@ $pageTitle = "Officer Assignments - CDF Management System";
                         <div class="bulk-assignment-panel">
                             <h6><i class="fas fa-info-circle me-2"></i>Assign multiple projects to one officer</h6>
                             <p class="mb-0">Select projects from the list below and choose an officer to assign them all at once.</p>
+                                <?= csrfField() ?>
                         </div>
 
                         <div class="mb-4">

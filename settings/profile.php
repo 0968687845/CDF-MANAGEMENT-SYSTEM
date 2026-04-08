@@ -13,6 +13,11 @@ $notifications = getNotifications($_SESSION['user_id']);
 
 // Handle profile update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect(basename($_SERVER['PHP_SELF']));
+        exit;
+    }
     if (isset($_POST['update_profile'])) {
         $first_name = $_POST['first_name'] ?? '';
         $last_name = $_POST['last_name'] ?? '';
@@ -731,6 +736,7 @@ $pageTitle = "My Profile - CDF Management System";
                                 <button type="button" class="btn btn-outline-custom" onclick="document.getElementById('profilePhotoInput').click()">
                                     <i class="fas fa-camera me-2"></i>Change Photo
                                 </button>
+                                    <?= csrfField() ?>
                                 <input type="file" id="profilePhotoInput" name="profile_picture" accept="image/*" onchange="document.getElementById('profilePhotoForm').submit()">
                                 <input type="hidden" name="upload_photo" value="1">
                             </div>
@@ -774,6 +780,7 @@ $pageTitle = "My Profile - CDF Management System";
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                                            <?= csrfField() ?>
                                         <input type="text" class="form-control" id="first_name" name="first_name" 
                                                value="<?php echo htmlspecialchars($userData['first_name']); ?>" required>
                                     </div>
@@ -903,6 +910,7 @@ $pageTitle = "My Profile - CDF Management System";
                                 <div class="col-md-6">
                                     <div class="mb-3">
                                         <label for="current_password" class="form-label">Current Password</label>
+                                            <?= csrfField() ?>
                                         <input type="password" class="form-control" id="current_password" name="current_password">
                                     </div>
                                 </div>

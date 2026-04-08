@@ -211,29 +211,67 @@ if (!defined('CDF_FUNCTIONS_LOADED')) {
         exit();
     }
 
+    // ── CSRF Protection ──────────────────────────────────────────────────────
+
+    function generateCsrfToken(): string {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['csrf_token'];
+    }
+
+    function verifyCsrfToken(string $token): bool {
+        return !empty($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+    }
+
+    function csrfField(): string {
+        return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(generateCsrfToken(), ENT_QUOTES, 'UTF-8') . '">';
+    }
+
+    // ── Authentication ───────────────────────────────────────────────────────
+
     function login($username, $password) {
         global $pdo;
-        
-        $query = "SELECT * FROM users WHERE username = :username AND status = 'active'";
-        $stmt = $pdo->prepare($query);
-        $stmt->bindParam(':username', $username);
-        $stmt->execute();
-        
-        if ($stmt->rowCount() == 1) {
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            if (password_verify($password, $user['password'])) {
-                // Check if system is in maintenance mode
-                if (isMaintenanceModeEnabled() && $user['role'] !== 'admin') {
-                    return false; // Don't allow non-admin login during maintenance
-                }
-                
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
-                $_SESSION['user_role'] = $user['role'];
-                $_SESSION['username'] = $user['username'];
-                return true;
-            }
+
+        // Check if account is locked out
+        $stmt = $pdo->prepare("SELECT id, password, role, first_name, last_name, login_attempts, account_locked_until FROM users WHERE username = ? AND status = 'active'");
+        $stmt->execute([$username]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$user) {
+            return false;
         }
+
+        if ($user['account_locked_until'] && strtotime($user['account_locked_until']) > time()) {
+            $remaining = ceil((strtotime($user['account_locked_until']) - time()) / 60);
+            return "Account locked due to too many failed attempts. Try again in {$remaining} minute(s).";
+        }
+
+        if (password_verify($password, $user['password'])) {
+            // Check maintenance mode
+            if (isMaintenanceModeEnabled() && $user['role'] !== 'admin') {
+                return false;
+            }
+
+            // Reset login attempts on success
+            $pdo->prepare("UPDATE users SET login_attempts = 0, account_locked_until = NULL, last_login = NOW() WHERE id = ?")
+                ->execute([$user['id']]);
+
+            $_SESSION['user_id']   = $user['id'];
+            $_SESSION['user_name'] = $user['first_name'] . ' ' . $user['last_name'];
+            $_SESSION['user_role'] = $user['role'];
+            $_SESSION['username']  = $username;
+            return true;
+        }
+
+        // Failed attempt — increment counter, lock after 5 failures
+        $pdo->prepare("
+            UPDATE users
+            SET login_attempts = login_attempts + 1,
+                account_locked_until = IF(login_attempts + 1 >= 5, DATE_ADD(NOW(), INTERVAL 15 MINUTE), NULL)
+            WHERE id = ?
+        ")->execute([$user['id']]);
+
         return false;
     }
 

@@ -10,6 +10,12 @@ if (isset($_GET['logout'])) {
 
 // Handle registration
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect('register.php');
+        exit;
+    }
+
     // Sanitize input data
     $data = sanitize($_POST);
     
@@ -116,11 +122,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
 // Handle login
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect('login.php');
+        exit;
+    }
+
     $username = sanitize($_POST['username']);
-    $password = sanitize($_POST['password']);
-    
-    if (login($username, $password)) {
-        // Redirect based on user role
+    $password = $_POST['password']; // Do not sanitize password before verify
+
+    $result = login($username, $password);
+    if ($result === true) {
         switch ($_SESSION['user_role']) {
             case 'admin':
                 redirect('admin_dashboard.php');
@@ -135,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 redirect('index.php');
         }
     } else {
-        $_SESSION['error'] = "Invalid username or password";
+        $_SESSION['error'] = is_string($result) ? $result : "Invalid username or password";
         redirect('login.php');
     }
 }

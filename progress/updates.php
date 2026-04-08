@@ -14,6 +14,11 @@ $projects = getBeneficiaryProjects($_SESSION['user_id']);
 
 // Handle progress update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect(basename($_SERVER['PHP_SELF']));
+        exit;
+    }
     if (isset($_POST['update_progress'])) {
         $project_id = $_POST['project_id'] ?? '';
         $description = $_POST['description'] ?? '';
@@ -1619,6 +1624,7 @@ $pageTitle = "Update Progress - CDF Management System";
                                     <label for="project_id" class="form-label required-field">Select Project</label>
                                     <select class="form-select" id="project_id" name="project_id" required onchange="loadProjectProgress(this.value)">
                                         <option value="">Choose a project...</option>
+                                            <?= csrfField() ?>
                                         <?php foreach ($projects as $project): 
                                             // Calculate automated progress for each project in dropdown
                                             $auto_progress = getRecommendedProgressPercentage($project['id']);
@@ -1866,6 +1872,7 @@ $pageTitle = "Update Progress - CDF Management System";
                                                 <button type="submit" name="request_completion" class="btn btn-success btn-sm">
                                                     <i class="fas fa-flag me-1"></i>Mark as Completed
                                                 </button>
+                                                    <?= csrfField() ?>
                                             </form>
                                         <?php else: ?>
                                             <i class="fas fa-exclamation-triangle me-2"></i>

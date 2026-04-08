@@ -92,6 +92,11 @@ if (!function_exists('getOfficerProjects')) {
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect(basename($_SERVER['PHP_SELF']));
+        exit;
+    }
     $complianceData = [
         'project_id' => $_POST['project_id'],
         'budget_compliance' => $_POST['budget_compliance'],
@@ -952,6 +957,7 @@ $pageTitle = "Compliance Check - CDF Management System";
                         <input type="hidden" name="check_id" value="<?php echo $compliance_to_edit['id']; ?>">
                     <?php endif; ?>
                     <div class="modal-body">
+                        <?= csrfField() ?>
                         <div class="form-section">
                             <h6 class="mb-3"><i class="fas fa-project-diagram me-2"></i>Project Information</h6>
                             <div class="mb-3">

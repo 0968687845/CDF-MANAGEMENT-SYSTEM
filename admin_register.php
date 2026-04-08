@@ -123,6 +123,7 @@ $pageTitle = "Admin Registration - CDF Management System";
                 </div>
                 
                 <form method="POST" action="auth.php">
+                    <?= csrfField() ?>
                     <input type="hidden" name="role" value="admin">
                     
                     <!-- Personal Information Section -->

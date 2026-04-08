@@ -13,6 +13,11 @@ $notifications = getNotifications($_SESSION['user_id']);
 
 // Handle system settings update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect(basename($_SERVER['PHP_SELF']));
+        exit;
+    }
     if (isset($_POST['update_notifications'])) {
         $_SESSION['success'] = "Notification preferences updated successfully!";
     }
@@ -741,6 +746,7 @@ $pageTitle = "System Settings - CDF Management System";
                                 <h6><i class="fas fa-envelope me-2"></i>Notification Channels</h6>
                                 <div class="form-check form-switch mb-3">
                                     <input class="form-check-input" type="checkbox" id="email_notifications" name="email_notifications" 
+                                        <?= csrfField() ?>
                                            <?php echo ($userSettings['email_notifications'] ?? 1) ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="email_notifications">
                                         Email Notifications
@@ -813,6 +819,7 @@ $pageTitle = "System Settings - CDF Management System";
                                 <h6><i class="fas fa-user-lock me-2"></i>Privacy Settings</h6>
                                 <div class="mb-3">
                                     <label for="profile_visibility" class="form-label">Profile Visibility</label>
+                                        <?= csrfField() ?>
                                     <select class="form-select" id="profile_visibility" name="profile_visibility">
                                         <option value="public" <?php echo ($userSettings['profile_visibility'] ?? 'private') == 'public' ? 'selected' : ''; ?>>Public</option>
                                         <option value="private" <?php echo ($userSettings['profile_visibility'] ?? 'private') == 'private' ? 'selected' : ''; ?>>Private</option>
@@ -869,6 +876,7 @@ $pageTitle = "System Settings - CDF Management System";
                             <input type="hidden" name="longitude" id="longitude">
                             <input type="hidden" name="address" id="address">
                             
+                                 <?= csrfField() ?>
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Latitude</label>

@@ -16,6 +16,11 @@ $systemSettings = getSystemSettings();
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect(basename($_SERVER['PHP_SELF']));
+        exit;
+    }
     if (isset($_POST['update_general_settings'])) {
         // Update general settings
         $settingsData = [
@@ -911,6 +916,7 @@ $pageTitle = "System Settings - CDF Management System";
                                 <h6><i class="fas fa-info-circle"></i>Basic Information</h6>
                                 
                                 <div class="setting-item">
+                                    <?= csrfField() ?>
                                     <div class="setting-label">System Name</div>
                                     <div class="setting-description">The name that appears throughout the system</div>
                                     <input type="text" class="form-control" name="system_name" value="<?php echo htmlspecialchars($systemSettings['system_name'] ?? 'CDF Management System'); ?>" required>
@@ -1016,6 +1022,7 @@ $pageTitle = "System Settings - CDF Management System";
                                 <h6><i class="fas fa-envelope"></i>Email Notifications</h6>
                                 
                                 <div class="setting-item">
+                                    <?= csrfField() ?>
                                     <div class="form-check form-switch">
                                         <input class="form-check-input" type="checkbox" name="email_notifications" id="email_notifications" <?php echo ($systemSettings['email_notifications'] ?? 1) ? 'checked' : ''; ?>>
                                         <label class="form-check-label setting-label" for="email_notifications">
@@ -1101,6 +1108,7 @@ $pageTitle = "System Settings - CDF Management System";
                                 <h6><i class="fas fa-lock"></i>Authentication & Password Policy</h6>
                                 
                                 <div class="setting-item">
+                                    <?= csrfField() ?>
                                     <div class="setting-label">Password Policy</div>
                                     <div class="setting-description">Minimum requirements for user passwords</div>
                                     <select class="form-select" name="password_policy" required>

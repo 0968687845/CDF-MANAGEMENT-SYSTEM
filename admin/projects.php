@@ -68,6 +68,11 @@ if (isset($_GET['action'])) {
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error_message'] = "Invalid request. Please try again.";
+        redirect('projects.php');
+        exit;
+    }
     if (isset($_POST['create_project'])) {
         // Create new project
         $projectData = [
@@ -1428,6 +1433,7 @@ $pageTitle = isset($viewProject) ? "View Project - " . htmlspecialchars($viewPro
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="projects.php">
+                    <?= csrfField() ?>
                     <div class="modal-body">
                         <p>Are you sure you want to remove the monitoring officer from this project?</p>
                         <div class="alert alert-info">
@@ -1480,6 +1486,7 @@ $pageTitle = isset($viewProject) ? "View Project - " . htmlspecialchars($viewPro
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="projects.php">
+                    <?= csrfField() ?>
                     <div class="modal-body">
                         <div class="mb-3">
                             <label for="title" class="form-label">Project Title</label>
@@ -1552,6 +1559,7 @@ $pageTitle = isset($viewProject) ? "View Project - " . htmlspecialchars($viewPro
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="projects.php">
+                    <?= csrfField() ?>
                     <div class="modal-body">
                         <input type="hidden" name="project_id" value="<?php echo $editProject['id'] ?? ''; ?>">
                         <div class="mb-3">
@@ -1625,6 +1633,7 @@ $pageTitle = isset($viewProject) ? "View Project - " . htmlspecialchars($viewPro
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form method="POST" action="projects.php">
+                    <?= csrfField() ?>
                     <div class="modal-body">
                         <input type="hidden" name="project_id" value="<?php echo $assignProject['id'] ?? ''; ?>">
                         <div class="mb-3">

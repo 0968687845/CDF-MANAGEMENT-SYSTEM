@@ -54,64 +54,68 @@ if (!empty($token)) {
 
 // Process password reset form
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($token)) {
-    $new_password = $_POST['new_password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-    
-    // Validation
-    if (empty($new_password) || empty($confirm_password)) {
-        $error = "Please enter and confirm your new password";
-    } elseif ($new_password !== $confirm_password) {
-        $error = "Passwords do not match";
-    } elseif (!validatePassword($new_password)) {
-        $error = "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $error = "Invalid request. Please try again.";
     } else {
-        try {
-            global $pdo;
-            
-            // Get user from reset token
-            $query = "SELECT user_id FROM password_resets 
-                      WHERE token = :token 
-                      AND expires_at > NOW() 
-                      AND is_used = FALSE
-                      LIMIT 1";
-            $stmt = $pdo->prepare($query);
-            $stmt->bindParam(':token', $token);
-            $stmt->execute();
-            
-            if ($stmt->rowCount() > 0) {
-                $reset = $stmt->fetch(PDO::FETCH_ASSOC);
-                $user_id = $reset['user_id'];
-                
-                // Hash new password
-                $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-                
-                // Update user password
-                $updateQuery = "UPDATE users SET password = :password, updated_at = NOW() WHERE id = :user_id";
-                $updateStmt = $pdo->prepare($updateQuery);
-                $updateStmt->bindParam(':password', $hashed_password);
-                $updateStmt->bindParam(':user_id', $user_id);
-                
-                if ($updateStmt->execute()) {
-                    // Mark token as used
-                    $markQuery = "UPDATE password_resets SET is_used = TRUE, used_at = NOW() WHERE token = :token";
-                    $markStmt = $pdo->prepare($markQuery);
-                    $markStmt->bindParam(':token', $token);
-                    $markStmt->execute();
-                    
-                    // Log activity
-                    logActivity($user_id, 'password_reset_completed', 'Password reset completed via reset link');
-                    
-                    $success = "Your password has been successfully reset. You can now login with your new password.";
-                    $showForm = false;
+        $new_password = $_POST['new_password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+
+        // Validation
+        if (empty($new_password) || empty($confirm_password)) {
+            $error = "Please enter and confirm your new password";
+        } elseif ($new_password !== $confirm_password) {
+            $error = "Passwords do not match";
+        } elseif (!validatePassword($new_password)) {
+            $error = "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.";
+        } else {
+            try {
+                global $pdo;
+
+                // Get user from reset token
+                $query = "SELECT user_id FROM password_resets
+                          WHERE token = :token
+                          AND expires_at > NOW()
+                          AND is_used = FALSE
+                          LIMIT 1";
+                $stmt = $pdo->prepare($query);
+                $stmt->bindParam(':token', $token);
+                $stmt->execute();
+
+                if ($stmt->rowCount() > 0) {
+                    $reset = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $user_id = $reset['user_id'];
+
+                    // Hash new password
+                    $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+
+                    // Update user password
+                    $updateQuery = "UPDATE users SET password = :password, updated_at = NOW() WHERE id = :user_id";
+                    $updateStmt = $pdo->prepare($updateQuery);
+                    $updateStmt->bindParam(':password', $hashed_password);
+                    $updateStmt->bindParam(':user_id', $user_id);
+
+                    if ($updateStmt->execute()) {
+                        // Mark token as used
+                        $markQuery = "UPDATE password_resets SET is_used = TRUE, used_at = NOW() WHERE token = :token";
+                        $markStmt = $pdo->prepare($markQuery);
+                        $markStmt->bindParam(':token', $token);
+                        $markStmt->execute();
+
+                        // Log activity
+                        logActivity($user_id, 'password_reset_completed', 'Password reset completed via reset link');
+
+                        $success = "Your password has been successfully reset. You can now login with your new password.";
+                        $showForm = false;
+                    } else {
+                        $error = "Failed to update password. Please try again.";
+                    }
                 } else {
-                    $error = "Failed to update password. Please try again.";
+                    $error = "This password reset link is invalid or has expired. Please request a new one.";
                 }
-            } else {
-                $error = "This password reset link is invalid or has expired. Please request a new one.";
+            } catch (Exception $e) {
+                error_log("Error resetting password: " . $e->getMessage());
+                $error = "An error occurred. Please try again.";
             }
-        } catch (Exception $e) {
-            error_log("Error resetting password: " . $e->getMessage());
-            $error = "An error occurred. Please try again.";
         }
     }
 }
@@ -363,6 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($token)) {
                     </div>
 
                     <form method="POST" action="">
+                        <?= csrfField() ?>
                         <div class="mb-3">
                             <label for="new_password" class="form-label">New Password</label>
                             <input type="password" class="form-control" id="new_password" name="new_password" required 

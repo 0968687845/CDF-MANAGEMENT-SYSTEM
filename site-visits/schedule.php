@@ -69,6 +69,11 @@ $default_date = date('Y-m-d');
 $default_time = '09:00';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
+        $_SESSION['error'] = "Invalid request. Please try again.";
+        redirect(basename($_SERVER['PHP_SELF']));
+        exit;
+    }
     // Validate and sanitize input
     $project_id = trim($_POST['project_id'] ?? '');
     $visit_date = trim($_POST['visit_date'] ?? '');
@@ -1179,6 +1184,7 @@ $pageTitle = "Schedule Site Visit - CDF Management System";
                         <div class="mb-4">
                             <label for="project_id" class="form-label">Select Project</label>
                             <select class="form-select" id="project_id" name="project_id" required 
+                                <?= csrfField() ?>
                                     onchange="updateProjectInfo(this.value)">
                                 <option value="">Choose a project...</option>
                                 <?php foreach ($projects as $project): ?>

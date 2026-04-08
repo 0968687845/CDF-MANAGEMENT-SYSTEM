@@ -617,6 +617,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-section">
                     <h5 class="section-title"><i class="fas fa-sign-in-alt"></i>Login Credentials</h5>
                     <form method="POST">
+                        <?= csrfField() ?>
                         <div class="mb-4">
                             <label for="username" class="form-label fw-semibold">Username</label>
                             <div class="input-group">
