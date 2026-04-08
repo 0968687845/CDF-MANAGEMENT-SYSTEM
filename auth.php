@@ -92,7 +92,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         $result = registerUser($data);
         
         if ($result === true) {
-            $_SESSION['success'] = "Registration successful! You can now login.";
+            $role = $data['role'] ?? 'beneficiary';
+            if ($role === 'beneficiary') {
+                $_SESSION['success'] = "Registration submitted! Your account is pending admin approval. You will be notified once approved.";
+            } else {
+                $_SESSION['success'] = "Registration successful! You can now login.";
+            }
             redirect('login.php');
         } else {
             $_SESSION['error'] = $result;

@@ -71,6 +71,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($token)) {
             try {
                 global $pdo;
 
+                // Hash the incoming token to compare against stored hash
+                $hashedToken = hash('sha256', $token);
+
                 // Get user from reset token
                 $query = "SELECT user_id FROM password_resets
                           WHERE token = :token
@@ -78,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($token)) {
                           AND is_used = FALSE
                           LIMIT 1";
                 $stmt = $pdo->prepare($query);
-                $stmt->bindParam(':token', $token);
+                $stmt->bindParam(':token', $hashedToken);
                 $stmt->execute();
 
                 if ($stmt->rowCount() > 0) {
@@ -95,10 +98,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($token)) {
                     $updateStmt->bindParam(':user_id', $user_id);
 
                     if ($updateStmt->execute()) {
-                        // Mark token as used
+                        // Mark token as used (compare against stored hash)
                         $markQuery = "UPDATE password_resets SET is_used = TRUE, used_at = NOW() WHERE token = :token";
                         $markStmt = $pdo->prepare($markQuery);
-                        $markStmt->bindParam(':token', $token);
+                        $markStmt->bindParam(':token', $hashedToken);
                         $markStmt->execute();
 
                         // Log activity
