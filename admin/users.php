@@ -15,7 +15,7 @@ $notifications = getNotifications($_SESSION['user_id']);
 // Handle user actions
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
-    $userId = $_GET['id'] ?? null;
+    $userId = (int)($_GET['id'] ?? 0);
     
     if ($action === 'edit' && $userId) {
         // Get user data for editing

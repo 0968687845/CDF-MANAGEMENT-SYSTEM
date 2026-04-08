@@ -40,7 +40,7 @@ $beneficiaries = getFilteredBeneficiaries();
 // Handle project actions
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
-    $projectId = $_GET['id'] ?? null;
+    $projectId = (int)($_GET['id'] ?? 0);
     
     if ($action === 'view' && $projectId) {
         // Get project data for viewing

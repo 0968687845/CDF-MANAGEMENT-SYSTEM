@@ -9,8 +9,8 @@ if (isset($_GET['logout'])) {
 }
 
 // Get project ID from query parameter
-$project_id = $_GET['id'] ?? null;
-if (!$project_id) {
+$project_id = (int)($_GET['id'] ?? 0);
+if ($project_id <= 0) {
     redirect('projects.php');
     exit();
 }
